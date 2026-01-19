@@ -66,7 +66,7 @@ if command -v bash-ai &> /dev/null; then
     echo ""
     echo "Next steps:"
     echo "1. Edit .env and add your GOOGLE_API_KEY"
-    echo "2. Try it out: bash-ai ask 'Hello, world!'"
+    echo "2. Try it out: bash-ai 'Hello, world!'"
     echo ""
     echo "To integrate with bash:"
     echo "  source scripts/bash_integration.sh"

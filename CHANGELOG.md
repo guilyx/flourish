@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Initial release of bash.ai
-- `ask` command for direct LLM interaction without command execution
-- `agent` command with code execution capabilities using Google ADK
+- Unified `agent` command that can both answer questions and execute commands
+- Intelligent code execution that automatically determines when to run commands
 - Allowlist and blacklist support for command execution security
 - Support for multiple Gemini models via configuration
 - Rich CLI output with markdown formatting

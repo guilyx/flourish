@@ -6,20 +6,18 @@
 
 ## Features
 
-- **Ask Mode**: Direct LLM interaction without command execution
+- **Unified Agent**: Single intelligent agent that can both answer questions and execute commands
   ```bash
-  bash-ai ask "What is the difference between git merge and rebase?"
+  bash-ai "What is the difference between git merge and rebase?"
+  bash-ai "List all files in the current directory and show git status"
   ```
 
-- **Agent Mode**: AI agent with command execution capabilities
-  ```bash
-  bash-ai agent "List all files in the current directory and show git status"
-  ```
+- **Intelligent Execution**: The agent automatically determines when to execute code based on your request
 
 - **Security Controls**: Allowlist and blacklist for command execution
   ```bash
-  bash-ai agent --allowlist "ls,cd,git" "Check git status"
-  bash-ai agent --blacklist "rm,dd" "Help me organize files"
+  bash-ai --allowlist "ls,cd,git" "Check git status"
+  bash-ai --blacklist "rm,dd" "Help me organize files"
   ```
 
 - **AI-Enhanced Bash**: Auto-completion suggestions and intelligent command assistance
@@ -80,7 +78,7 @@ pyenv global 3.12.0
    source .venv/bin/activate
 
    # Option 2: Use uv run (recommended)
-   uv run bash-ai ask "Hello"
+   uv run bash-ai "Hello"
    ```
 
    To make `bash-ai` available globally, add to your `~/.bashrc` or `~/.zshrc`:
@@ -92,26 +90,40 @@ pyenv global 3.12.0
 
 ### Basic Usage
 
-**Ask a question (no command execution):**
+**Ask questions or request actions:**
 ```bash
-bash-ai ask "Explain how Docker containers work"
-```
+# The agent will answer questions
+bash-ai "Explain how Docker containers work"
 
-**Use agent with command execution:**
-```bash
-bash-ai agent "Find all .py files in the current directory"
+# The agent will execute commands when needed
+bash-ai "Find all .py files in the current directory"
+
+# The agent intelligently decides when to execute code
+bash-ai "What files are in this directory?"  # May execute ls
+bash-ai "What is git?"  # Will just explain
 ```
 
 ### Advanced Usage
 
 **With allowlist (only allow specific commands):**
 ```bash
-bash-ai agent --allowlist "ls,cd,git,find" "Show me git status and list files"
+bash-ai --allowlist "ls,cd,git,find" "Show me git status and list files"
 ```
 
 **With blacklist (prevent specific commands):**
 ```bash
-bash-ai agent --blacklist "rm,dd,format" "Help me organize my project files"
+bash-ai --blacklist "rm,dd,format" "Help me organize my project files"
+```
+
+**With live streaming (real-time output):**
+```bash
+bash-ai --stream "Explain how Docker containers work"
+bash-ai -s "List files and show git status"  # Short form
+```
+
+**Note**: For best streaming experience, use a live model in your `.env`:
+```bash
+GEMINI_MODEL=gemini-2.0-flash-live-001
 ```
 
 **Specify a different model:**
@@ -128,15 +140,14 @@ Add to your `~/.bashrc` or `~/.zshrc`:
 # Add bash-ai to PATH if installed locally
 export PATH=$PATH:/path/to/bash.ai/.venv/bin
 
-# Create convenient aliases
-alias ask='bash-ai ask'
-alias agent='bash-ai agent'
+# Create convenient alias (optional)
+alias ai='bash-ai'
 ```
 
 Then you can use:
 ```bash
-ask "What is Kubernetes?"
-agent "Check my git status and show recent commits"
+ai "What is Kubernetes?"
+ai "Check my git status and show recent commits"
 ```
 
 ### AI-Enhanced Bash Features
@@ -164,7 +175,7 @@ The `.env` file is automatically loaded when you run the application - no need t
 Alternatively, you can export it directly in your shell:
 ```bash
 export GOOGLE_API_KEY="your-api-key-here"
-bash-ai ask "Hello"
+bash-ai "Hello"
 ```
 
 ## Development
