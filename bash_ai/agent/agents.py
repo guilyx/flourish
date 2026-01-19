@@ -1,11 +1,12 @@
-"""Agent definitions for bash.ai."""
+"""Agent definitions for bash.ai using LiteLLM."""
 
-import os
+import json
+from typing import Any
 
-from google.adk.agents import LlmAgent
+from litellm import completion
 
 from ..config import get_settings
-from ..tools import get_bash_tools
+from ..tools import get_bash_tools_dict, set_allowlist_blacklist
 
 
 def build_agent_instruction(allowed_commands: list[str], blacklisted_commands: list[str]) -> str:
@@ -56,14 +57,6 @@ You have access to bash execution tools that allow you to run shell commands. Wh
 
 3. **For complex workflows**: Break down the task into steps, use `set_cwd` to change directories if needed, execute commands using `execute_bash`, and provide clear feedback at each stage. **Automatically add frequently-used commands to the allowlist as you encounter them.**
 
-**Example workflow when command needs confirmation:**
-1. User asks: "Check git status"
-2. You call: `execute_bash("git status")`
-3. Tool returns: `{"status": "pending_confirmation", "message": "Command 'git' is not in allowlist..."}`
-4. You immediately call: `add_to_allowlist("git")` (system handles confirmation)
-5. After confirmation, you call: `execute_bash("git status")` again
-6. Command executes successfully
-
 ## Tool Usage Guidelines
 
 You have access to these tools:
@@ -92,14 +85,6 @@ When executing commands:
 3. Wait for the confirmation to complete (system handles it automatically)
 4. **Then call `execute_bash` again** - it will now execute without confirmation
 5. **Never skip this step** - always add commands to allowlist when they require confirmation
-
-**Example**:
-- User: "Run git status"
-- You: Call `execute_bash("git status")`
-- Response: `{"status": "pending_confirmation", "message": "Command 'git' is not in allowlist..."}`
-- You: **Immediately call `add_to_allowlist("git")`** (don't ask, just do it)
-- After confirmation: Call `execute_bash("git status")` again
-- Result: Command executes successfully
 
 When you encounter a dangerous command that should be blocked:
 1. **Automatically add it to the blacklist** using `add_to_blacklist` tool (don't ask, just do it)
@@ -154,22 +139,17 @@ Remember: You're talking to a developer. Be efficient, technical, and direct. Ex
 def get_agent(
     allowed_commands: list[str] | None = None,
     blacklisted_commands: list[str] | None = None,
-) -> LlmAgent:
-    """Create and return the agent with code execution capabilities.
+):
+    """Create and return an agent function that uses LiteLLM.
 
     Args:
         allowed_commands: Optional list of allowed commands (overrides default)
         blacklisted_commands: Optional list of blacklisted commands (overrides default)
 
     Returns:
-        LlmAgent: The configured agent with code execution
+        A function that can be called with (messages, tools) to get agent responses
     """
     settings = get_settings()
-
-    # Configure Google AI settings
-    if settings.google_api_key:
-        os.environ.setdefault("GOOGLE_API_KEY", settings.google_api_key)
-    os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", settings.google_genai_use_vertexai)
 
     # Use provided lists or defaults
     allowed = allowed_commands if allowed_commands is not None else settings.default_allowlist
@@ -177,18 +157,36 @@ def get_agent(
         blacklisted_commands if blacklisted_commands is not None else settings.default_blacklist
     )
 
+    # Set global allowlist/blacklist for tools
+    set_allowlist_blacklist(allowlist=allowed, blacklist=blacklisted)
+
     instruction = build_agent_instruction(allowed, blacklisted)
 
-    # Get bash execution tools with allowlist/blacklist
-    bash_tools = get_bash_tools(allowlist=allowed, blacklist=blacklisted)
+    def agent_function(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None = None):
+        """Execute agent with LiteLLM.
 
-    # Create agent with custom bash tools
-    agent = LlmAgent(
-        name="bash_agent",
-        model=settings.model,
-        tools=bash_tools,
-        description="An AI-powered bash environment assistant that can answer questions and execute terminal commands to help with complex workflows.",
-        instruction=instruction,
-    )
+        Args:
+            messages: List of message dicts with 'role' and 'content'
+            tools: Optional list of tool definitions for function calling
 
-    return agent
+        Returns:
+            Response from LiteLLM
+        """
+        # Add system instruction
+        system_message = {"role": "system", "content": instruction}
+        if messages and messages[0].get("role") == "system":
+            messages[0] = system_message
+        else:
+            messages.insert(0, system_message)
+
+        response = completion(
+            model=settings.model,
+            messages=messages,
+            tools=tools,
+            api_key=settings.api_key,
+            api_base=settings.api_base,
+        )
+
+        return response
+
+    return agent_function
