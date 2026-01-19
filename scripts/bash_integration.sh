@@ -15,7 +15,7 @@ _bash_ai_suggest() {
     fi
 
     # Get AI suggestion (non-blocking, runs in background)
-    (bash-ai ask "Suggest the next command after: $command" 2>/dev/null) &
+    (bash-ai "Suggest the next command after: $command" 2>/dev/null) &
 }
 
 # Function to enhance command execution with AI
@@ -28,7 +28,7 @@ _bash_ai_enhance() {
         if command -v bash-ai &> /dev/null; then
             echo ""
             echo "💡 AI Suggestion:"
-            bash-ai ask "The command '$last_command' failed with exit code $exit_code. What might be wrong and how to fix it?" 2>/dev/null | head -5
+            bash-ai "The command '$last_command' failed with exit code $exit_code. What might be wrong and how to fix it?" 2>/dev/null | head -5
             echo ""
         fi
     fi
@@ -40,17 +40,14 @@ if [ -n "$BASH_VERSION" ]; then
     trap '_bash_ai_enhance "$BASH_COMMAND" "$?"' DEBUG 2>/dev/null || true
 fi
 
-# Create convenient aliases
-alias ask='bash-ai ask'
-alias agent='bash-ai agent'
+# Create convenient alias
+alias ai='bash-ai'
 
 # Auto-completion helper
 _bash_ai_complete() {
     local cur="${COMP_WORDS[COMP_CWORD]}"
     if [ "$COMP_CWORD" -eq 1 ]; then
-        COMPREPLY=($(compgen -W "ask agent" -- "$cur"))
-    elif [ "$COMP_CWORD" -eq 2 ] && [ "${COMP_WORDS[1]}" = "agent" ]; then
-        COMPREPLY=($(compgen -W "--allowlist --blacklist" -- "$cur"))
+        COMPREPLY=($(compgen -W "--allowlist --blacklist --help --version" -- "$cur"))
     fi
 }
 
@@ -59,4 +56,4 @@ if command -v complete &> /dev/null; then
     complete -F _bash_ai_complete bash-ai
 fi
 
-echo "bash.ai integration loaded. Use 'ask' and 'agent' commands."
+echo "bash.ai integration loaded. Use 'bash-ai' or 'ai' command."
