@@ -1,0 +1,10 @@
+{
+  "allowlist": [],
+  "blacklist": [
+    "rm",
+    "dd",
+    "format",
+    "mkfs",
+    "chmod 777"
+  ]
+}
