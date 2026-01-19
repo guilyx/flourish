@@ -84,10 +84,10 @@ class BashAIApp(App):
         ("ctrl+u", "clear_line", "Clear Line"),
     ]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.config_manager = ConfigManager()
-        self.messages = []
+        self.messages: list[dict[str, str]] = []
         self.current_allowlist = self.config_manager.get_allowlist()
         self.current_blacklist = self.config_manager.get_blacklist()
         self.command_history: list[str] = []

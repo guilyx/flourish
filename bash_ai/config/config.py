@@ -11,7 +11,7 @@ load_dotenv()
 class Settings:
     """Application settings loaded from environment variables."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Google AI configuration
         self.google_api_key: str | None = os.getenv("GOOGLE_API_KEY")
         if not self.google_api_key:
