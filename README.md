@@ -6,21 +6,26 @@
 
 ## Features
 
-- **Unified Agent**: Single intelligent agent that can both answer questions and execute commands
+- **Terminal Environment**: AI-enabled terminal that looks and feels like a real bash terminal
+  - Execute commands directly (e.g., `ls`, `git status`, `cd ~/projects`)
+  - AI assistance available on-demand with `?` prefix or `Ctrl+A`
+  - Real-time command output with color-coded results
+
+- **AI Assistance**: Get help from AI without leaving your terminal
   ```bash
-  bash-ai "What is the difference between git merge and rebase?"
-  bash-ai "List all files in the current directory and show git status"
+  $ ? explain the difference between git merge and rebase
+  $ ? how do I check disk usage?
+  $ ? help me write a script to find large files
   ```
 
-- **Intelligent Execution**: The agent automatically determines when to execute code based on your request
-
-- **Security Controls**: Allowlist and blacklist for command execution
+- **Direct Command Execution**: Run bash commands immediately - no agent wrapper needed
   ```bash
-  bash-ai --allowlist "ls,cd,git" "Check git status"
-  bash-ai --blacklist "rm,dd" "Help me organize files"
+  $ ls -la
+  $ git status
+  $ cd ~/projects
   ```
 
-- **AI-Enhanced Bash**: Auto-completion suggestions and intelligent command assistance
+- **Security Controls**: Allowlist and blacklist for AI-executed commands (when AI runs commands via tools)
 
 ## Prerequisites
 
@@ -38,6 +43,32 @@ pyenv global 3.12.0
 
 # Or download from python.org
 ```
+
+## Quick Start
+
+1. **Install and configure**:
+   ```bash
+   git clone https://github.com/made-after-dark/bash.ai.git
+   cd bash.ai
+   python3.12 -m venv .venv
+   source .venv/bin/activate
+   pip install -e ".[dev]"
+   cp env.example .env
+   # Edit .env and add your API_KEY
+   ```
+
+2. **Launch the terminal**:
+   ```bash
+   bash-ai
+   ```
+
+3. **Start using it**:
+   ```bash
+   $ ls -la                    # Execute commands directly
+   $ ? explain git merge       # Ask AI for help
+   $ git status                # Normal bash commands work
+   $ Ctrl+A                    # Or press Ctrl+A to ask AI
+   ```
 
 ## Installation
 
@@ -75,48 +106,57 @@ pyenv global 3.12.0
 
 ## Usage
 
-### Basic Usage
+### Terminal Interface (TUI) - Recommended
 
-**Ask questions or request actions:**
+Launch the AI-enabled terminal environment:
+
 ```bash
-# The agent will answer questions
-bash-ai "Explain how Docker containers work"
-
-# The agent will execute commands when needed
-bash-ai "Find all .py files in the current directory"
-
-# The agent intelligently decides when to execute code
-bash-ai "What files are in this directory?"  # May execute ls
-bash-ai "What is git?"  # Will just explain
+bash-ai
+# or
+bash-ai tui
 ```
 
-### Advanced Usage
+This opens an interactive terminal where you can:
 
-**With allowlist (only allow specific commands):**
-```bash
-bash-ai --allowlist "ls,cd,git,find" "Show me git status and list files"
-```
+1. **Execute commands directly** (just like a normal terminal):
+   ```bash
+   $ ls -la
+   $ git status
+   $ cd ~/projects
+   $ pwd
+   ```
 
-**With blacklist (prevent specific commands):**
-```bash
-bash-ai --blacklist "rm,dd,format" "Help me organize my project files"
-```
+2. **Get AI assistance** using the `?` prefix:
+   ```bash
+   $ ? explain the difference between git merge and rebase
+   $ ? how do I check disk usage?
+   $ ? help me write a script to find large files
+   ```
 
-**With live streaming (real-time output):**
-```bash
-bash-ai --stream "Explain how Docker containers work"
-bash-ai -s "List files and show git status"  # Short form
-```
+3. **Use keyboard shortcuts**:
+   - `Ctrl+A` - Start an AI prompt
+   - `↑/↓` - Navigate command history
+   - `Ctrl+L` - Clear screen
+   - `?` - Show help
+   - `Q` or `Ctrl+C` - Quit
 
-**Note**: For best streaming experience, use a live model in your `.env`:
-```bash
-GEMINI_MODEL=gemini-2.0-flash-live-001
-```
+### Command-Line Interface (CLI)
 
-**Specify a different model:**
+For non-interactive use or scripting:
+
 ```bash
-# Set in .env file
-GEMINI_MODEL=gemini-3-pro-preview
+# Ask questions
+bash-ai agent "Explain how Docker containers work"
+
+# With allowlist (only allow specific commands for AI execution)
+bash-ai agent --allowlist "ls,cd,git,find" "Show me git status and list files"
+
+# With blacklist (prevent specific commands)
+bash-ai agent --blacklist "rm,dd,format" "Help me organize my project files"
+
+# With live streaming (real-time output)
+bash-ai agent --stream "Explain how Docker containers work"
+bash-ai agent -s "List files and show git status"  # Short form
 ```
 
 ### Bash Integration
@@ -133,17 +173,12 @@ alias ai='bash-ai'
 
 Then you can use:
 ```bash
-ai "What is Kubernetes?"
-ai "Check my git status and show recent commits"
+# Launch terminal interface
+ai
+
+# Or use CLI mode
+ai agent "What is Kubernetes?"
 ```
-
-### AI-Enhanced Bash Features
-
-The tool provides intelligent command suggestions and auto-completion:
-
-- **Context-aware suggestions**: Based on your current directory and recent commands
-- **Error recovery**: Suggests fixes when commands fail
-- **Workflow automation**: Helps orchestrate complex multi-step tasks
 
 ## Configuration
 
@@ -278,8 +313,8 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## Roadmap
 
-- [ ] Interactive mode with conversation history
-- [ ] Config file for persistent settings
+- [x] Interactive terminal environment
+- [x] Config file for persistent settings (commands.json)
 - [ ] Plugin system for custom tools
 - [ ] Better command validation and sandboxing
 - [ ] Multi-agent orchestration

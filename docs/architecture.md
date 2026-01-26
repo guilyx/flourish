@@ -25,8 +25,8 @@ The system is composed of several key Python packages:
    - **Details**: Handles sending user prompts to the agent, processing streaming responses, and logging the conversation and tool calls. It acts as the bridge between the UI and the core agent logic.
 
 5. **`bash_ai.ui`**:
-   - **Purpose**: Implements the Text User Interface (TUI) and the command-line interface (CLI).
-   - **Details**: The TUI provides an interactive chat environment with keyboard shortcuts and displays real-time agent responses and configuration. The CLI offers direct command-line interaction.
+   - **Purpose**: Implements the Terminal User Interface (TUI) and the command-line interface (CLI).
+   - **Details**: The TUI provides an interactive terminal environment where users can execute bash commands directly and request AI assistance using the `?` prefix or `Ctrl+A`. Commands execute immediately via subprocess, while AI requests are routed to the agent. The CLI offers non-interactive command-line interaction for scripting and automation.
 
 6. **`bash_ai.logging`**:
    - **Purpose**: Manages structured logging for sessions, conversations, and tool executions.
@@ -40,9 +40,10 @@ The system is composed of several key Python packages:
    - `bash_ai.logging` initializes a new session log file.
 
 2. **User Input**:
-   - The user enters a prompt in the TUI or via the CLI.
-   - The `bash_ai.ui` component captures the input.
-   - `bash_ai.logging` records the user's message.
+   - **Terminal Mode**: The user types commands directly in the TUI terminal. Regular bash commands (e.g., `ls`, `cd`, `git status`) execute immediately via subprocess. AI requests (prefixed with `?` or triggered via `Ctrl+A`) are sent to the agent.
+   - **CLI Mode**: The user provides a prompt via command-line arguments.
+   - The `bash_ai.ui` component captures the input and determines whether to execute directly or route to the agent.
+   - `bash_ai.logging` records user commands and AI requests.
 
 3. **Agent Processing**:
    - The `bash_ai.runner` sends the user's prompt to the `bash_ai.agent`.
@@ -62,10 +63,11 @@ The system is composed of several key Python packages:
    - `bash_ai.logging` records all tool calls, their parameters, and results.
 
 6. **Output and Display**:
-   - The results from tool execution (stdout, stderr, status) or direct LLM text responses are sent back to the `bash_ai.runner`.
+   - **Direct Command Execution**: For regular bash commands, output (stdout/stderr) is displayed immediately in the terminal with color coding (green for commands, white for output, red for errors).
+   - **AI Responses**: The results from tool execution (stdout, stderr, status) or direct LLM text responses are sent back to the `bash_ai.runner`.
    - The `bash_ai.runner` streams or sends the complete response to the `bash_ai.ui`.
-   - The `bash_ai.ui` displays the formatted output to the user.
-   - `bash_ai.logging` records the agent's response.
+   - The `bash_ai.ui` displays AI responses in cyan, maintaining the terminal aesthetic.
+   - `bash_ai.logging` records all commands, tool calls, and agent responses.
 
 ## Security Model
 
