@@ -1,8 +1,6 @@
 """Command enhancement plugins for Flourish."""
 
 import os
-import stat
-import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any

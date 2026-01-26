@@ -5,7 +5,6 @@ import pytest
 from flourish.plugins import Plugin, PluginManager, ZshBindingsPlugin
 from flourish.plugins.enhancers import (
     CdEnhancementPlugin,
-    CommandEnhancer,
     EnhancerManager,
     LsColorEnhancer,
 )

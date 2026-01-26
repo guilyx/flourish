@@ -1,7 +1,5 @@
 """Additional tests for enhancers."""
 
-import os
-from pathlib import Path
 
 from flourish.plugins.enhancers import LsColorEnhancer
 
@@ -15,7 +13,7 @@ def test_ls_color_enhancer_long_format(tmp_path):
     (tmp_path / "dir").mkdir()
 
     # Simulate ls -l output
-    ls_output = f"total 0\n-rw-r--r-- 1 user user 0 Jan 1 00:00 file.txt\ndrwxr-xr-x 2 user user 4096 Jan 1 00:00 dir"
+    ls_output = "total 0\n-rw-r--r-- 1 user user 0 Jan 1 00:00 file.txt\ndrwxr-xr-x 2 user user 4096 Jan 1 00:00 dir"
 
     result = enhancer.enhance_output("ls -l", ls_output, "", 0, str(tmp_path))
     assert result["enhanced"] is True
