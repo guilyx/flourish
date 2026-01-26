@@ -1,5 +1,6 @@
 """Custom tools for Flourish agent."""
 
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -506,11 +507,11 @@ def is_in_blacklist(command: str) -> dict:
     return result
 
 
-def read_history(limit: int = 50) -> dict[str, Any]:
+def read_bash_history(limit: int = 50) -> dict[str, Any]:
     """
-    Read command history from the Flourish history file.
+    Read bash command history from the Flourish history file.
 
-    This tool allows the agent to see what commands have been executed previously,
+    This tool allows the agent to see what bash commands have been executed previously,
     which can help understand user workflow and context.
 
     Args:
@@ -537,7 +538,7 @@ def read_history(limit: int = 50) -> dict[str, Any]:
     try:
         if not history_file.exists():
             result["message"] = "History file does not exist yet"
-            log_tool_call("read_history", {"limit": limit}, result, success=True)
+            log_tool_call("read_bash_history", {"limit": limit}, result, success=True)
             return result
 
         # Read history file (prompt-toolkit FileHistory format: one command per line)
@@ -563,15 +564,156 @@ def read_history(limit: int = 50) -> dict[str, Any]:
     except PermissionError:
         result["status"] = "error"
         result["message"] = "Permission denied reading history file"
-        log_tool_call("read_history", {"limit": limit}, result, success=False)
+        log_tool_call("read_bash_history", {"limit": limit}, result, success=False)
         return result
     except Exception as e:
         result["status"] = "error"
         result["message"] = f"Error reading history: {str(e)}"
-        log_tool_call("read_history", {"limit": limit}, result, success=False)
+        log_tool_call("read_bash_history", {"limit": limit}, result, success=False)
         return result
 
-    log_tool_call("read_history", {"limit": limit}, result, success=True)
+    log_tool_call("read_bash_history", {"limit": limit}, result, success=True)
+    return result
+
+
+def read_conversation_history(limit: int = 20) -> dict[str, Any]:
+    """
+    Read conversation history from the most recent Flourish session log.
+
+    This tool allows the agent to see previous conversations, tool calls, and events
+    from the current or most recent session, helping maintain context across interactions.
+
+    Args:
+        limit: Maximum number of log entries to return (default: 20, max: 100).
+
+    Returns:
+        A dictionary with status, log entries, session info, and count.
+    """
+    logs_dir = Path.home() / ".config" / "flourish" / "logs"
+
+    # Validate limit
+    if limit < 1:
+        limit = 1
+    if limit > 100:
+        limit = 100
+
+    result: dict[str, Any] = {
+        "status": "success",
+        "session_dir": None,
+        "entries": [],
+        "count": 0,
+    }
+
+    try:
+        if not logs_dir.exists():
+            result["message"] = "Logs directory does not exist yet"
+            log_tool_call("read_conversation_history", {"limit": limit}, result, success=True)
+            return result
+
+        # Find most recent session directory
+        session_dirs = sorted(
+            [d for d in logs_dir.iterdir() if d.is_dir() and d.name.startswith("session_")],
+            key=lambda x: x.stat().st_mtime,
+            reverse=True,
+        )
+
+        if not session_dirs:
+            result["message"] = "No session logs found"
+            log_tool_call("read_conversation_history", {"limit": limit}, result, success=True)
+            return result
+
+        # Use most recent session
+        latest_session = session_dirs[0]
+        conversation_log = latest_session / "conversation.log"
+
+        if not conversation_log.exists():
+            result["message"] = "Conversation log file does not exist"
+            log_tool_call("read_conversation_history", {"limit": limit}, result, success=True)
+            return result
+
+        result["session_dir"] = str(latest_session)
+
+        # Read and parse log entries
+        # Format: "timestamp - name - level - JSON_MESSAGE"
+        entries = []
+        with open(conversation_log, encoding="utf-8") as f:
+            lines = f.readlines()
+
+        # Parse entries from most recent first
+        for line in reversed(lines[-limit * 2 :]):  # Read more lines to account for formatting
+            line = line.strip()
+            if not line:
+                continue
+
+            # Parse log format: "timestamp - name - level - JSON_MESSAGE"
+            # Try to extract JSON part (after the third " - ")
+            parts = line.split(" - ", 3)
+            if len(parts) >= 4:
+                try:
+                    log_data = json.loads(parts[3])
+                    entries.append(
+                        {
+                            "timestamp": log_data.get("timestamp", parts[0]),
+                            "event": log_data.get("event", "unknown"),
+                            "data": log_data,
+                        }
+                    )
+                    if len(entries) >= limit:
+                        break
+                except json.JSONDecodeError:
+                    # Skip malformed entries
+                    continue
+
+        # Reverse to show oldest first (chronological order)
+        entries.reverse()
+        result["entries"] = entries
+        result["count"] = len(entries)
+        result["message"] = (
+            f"Retrieved {len(entries)} conversation log entries from {latest_session.name}"
+        )
+
+    except PermissionError:
+        result["status"] = "error"
+        result["message"] = "Permission denied reading conversation logs"
+        log_tool_call("read_conversation_history", {"limit": limit}, result, success=False)
+        return result
+    except Exception as e:
+        result["status"] = "error"
+        result["message"] = f"Error reading conversation history: {str(e)}"
+        log_tool_call("read_conversation_history", {"limit": limit}, result, success=False)
+        return result
+
+    log_tool_call("read_conversation_history", {"limit": limit}, result, success=True)
+    return result
+
+
+def get_current_datetime() -> dict[str, Any]:
+    """
+    Get the current date and time.
+
+    This tool helps the agent understand the current time context, which is useful for
+    time-sensitive operations, scheduling, or understanding when events occurred.
+
+    Returns:
+        A dictionary with current date, time, timezone, and ISO format timestamp.
+    """
+    from datetime import datetime, timezone
+
+    # Use timezone.utc for Python 3.10+ compatibility (UTC alias requires 3.11+)
+    now = datetime.now(timezone.utc)  # noqa: UP017
+    local_now = datetime.now()
+
+    result: dict[str, Any] = {
+        "status": "success",
+        "iso_timestamp": now.isoformat(),
+        "local_datetime": local_now.strftime("%Y-%m-%d %H:%M:%S"),
+        "date": local_now.strftime("%Y-%m-%d"),
+        "time": local_now.strftime("%H:%M:%S"),
+        "timezone": str(local_now.astimezone().tzinfo) if local_now.tzinfo else "local",
+        "utc_datetime": now.strftime("%Y-%m-%d %H:%M:%S UTC"),
+    }
+
+    log_tool_call("get_current_datetime", {}, result, success=True)
     return result
 
 
@@ -601,7 +743,9 @@ def get_bash_tools(allowlist: list[str] | None = None, blacklist: list[str] | No
         list_blacklist,
         is_in_allowlist,
         is_in_blacklist,
-        read_history,
+        read_bash_history,
+        read_conversation_history,
+        get_current_datetime,
     ]
 
     return tools
