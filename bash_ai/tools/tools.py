@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+from pathlib import Path
 from typing import Any
 
 from google.adk.tools import FunctionTool, ToolContext
@@ -26,6 +27,29 @@ def set_allowlist_blacklist(allowlist: list[str] | None = None, blacklist: list[
     global GLOBAL_ALLOWLIST, GLOBAL_BLACKLIST
     GLOBAL_ALLOWLIST = allowlist
     GLOBAL_BLACKLIST = blacklist
+
+
+def get_user() -> dict[str, Any]:
+    """
+    Get the current user information including username and home directory.
+
+    This tool helps the agent understand the actual user context instead of using
+    hardcoded paths like /home/user.
+
+    Returns:
+        A dictionary with username, home directory, and current working directory.
+    """
+    username = os.getenv("USER") or os.getenv("USERNAME") or "unknown"
+    home_dir = str(Path.home())
+    current_dir = GLOBAL_CWD
+
+    result: dict[str, Any] = {
+        "username": username,
+        "home_directory": home_dir,
+        "current_working_directory": current_dir,
+    }
+    log_tool_call("get_user", {}, result, success=True)
+    return result
 
 
 def set_cwd(path: str) -> str:
@@ -477,6 +501,7 @@ def get_bash_tools(allowlist: list[str] | None = None, blacklist: list[str] | No
 
     # Wrap tools - no confirmations required, all tools execute directly
     tools = [
+        get_user,
         set_cwd,
         FunctionTool(execute_bash, require_confirmation=False),
         FunctionTool(add_to_allowlist, require_confirmation=False),
