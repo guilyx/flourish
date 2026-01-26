@@ -74,18 +74,19 @@ def execute_bash(cmd: str, tool_context: ToolContext | None = None) -> dict:
 
     base_cmd = cmd_parts[0]
 
-    # Check blacklist first (always blocked)
+    # SECURITY: Check blacklist FIRST - blacklist always takes precedence over allowlist
+    # This ensures that allowlist can NEVER bypass blacklist restrictions
     if GLOBAL_BLACKLIST:
         for blacklisted in GLOBAL_BLACKLIST:
             if blacklisted in base_cmd or base_cmd in blacklisted:
                 blocked_result: dict[str, Any] = {
                     "status": "blocked",
-                    "message": f"Command '{base_cmd}' is blacklisted",
+                    "message": f"Command '{base_cmd}' is blacklisted and cannot be executed",
                 }
                 log_tool_call("execute_bash", {"cmd": cmd}, blocked_result, success=False)
                 return blocked_result
 
-    # Check if command is in allowlist
+    # Check if command is in allowlist (only after blacklist check passes)
     in_allowlist = False
     if GLOBAL_ALLOWLIST:
         for allowed_cmd in GLOBAL_ALLOWLIST:
@@ -137,6 +138,19 @@ def execute_bash(cmd: str, tool_context: ToolContext | None = None) -> dict:
                     f"Use 'add_to_allowlist' tool to add '{base_cmd}' to allowlist, then retry."
                 ),
             }
+
+    # SECURITY: Final blacklist check before execution (defense in depth)
+    # This ensures that even if a command was added to allowlist after initial check,
+    # it will still be blocked if it's in the blacklist
+    if GLOBAL_BLACKLIST:
+        for blacklisted in GLOBAL_BLACKLIST:
+            if blacklisted in base_cmd or base_cmd in blacklisted:
+                blocked_result: dict[str, Any] = {
+                    "status": "blocked",
+                    "message": f"Command '{base_cmd}' is blacklisted and cannot be executed",
+                }
+                log_tool_call("execute_bash", {"cmd": cmd}, blocked_result, success=False)
+                return blocked_result
 
     # Execute the command
     try:
@@ -610,9 +624,9 @@ def get_bash_tools(allowlist: list[str] | None = None, blacklist: list[str] | No
     tools = [
         set_cwd,  # No confirmation needed for directory changes
         FunctionTool(execute_bash),  # Confirmation handled internally
-        FunctionTool(add_to_allowlist, require_confirmation=True),
-        FunctionTool(remove_from_allowlist, require_confirmation=True),
-        FunctionTool(add_to_blacklist, require_confirmation=True),
+        FunctionTool(add_to_allowlist, require_confirmation=False),
+        FunctionTool(remove_from_allowlist, require_confirmation=False),
+        FunctionTool(add_to_blacklist, require_confirmation=False),
         FunctionTool(remove_from_blacklist, require_confirmation=True),
         list_allowlist,  # Read-only, no confirmation needed
         list_blacklist,  # Read-only, no confirmation needed
