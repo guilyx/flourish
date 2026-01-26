@@ -136,7 +136,7 @@ flourish/
 │   │   ├── zsh_bindings.py  # Example plugin
 │   │   └── __init__.py
 │   ├── runner/           # Agent execution
-│   ├── tools/            # Agent tools
+│   ├── tools/            # Agent tools (organized by context: bash/, config/, history/, system/)
 │   └── ui/               # User interfaces (TUI, CLI)
 ├── config/               # Configuration files
 ├── docs/                 # Documentation

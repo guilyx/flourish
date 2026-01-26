@@ -429,7 +429,12 @@ flourish/
 │   │   ├── enhancers.py  # Command output enhancers
 │   │   └── zsh_bindings.py  # Example: zsh-like bindings
 │   ├── runner/           # Agent execution logic
-│   ├── tools/            # Custom tools for bash execution
+│   ├── tools/            # Custom tools for bash execution (modular by context)
+│   │   ├── bash/         # Bash execution tools (execute_bash, set_cwd, get_user)
+│   │   ├── config/       # Configuration tools (allowlist/blacklist management)
+│   │   ├── history/      # History tools (read_bash_history, read_conversation_history)
+│   │   ├── system/       # System information tools (get_current_datetime)
+│   │   └── globals.py    # Shared global variables
 │   └── ui/               # Text User Interface (TUI) and CLI
 ├── config/               # Persistent configuration files (e.g., commands.json)
 ├── docs/                 # Project documentation
