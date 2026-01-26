@@ -34,14 +34,22 @@ def get_user() -> dict[str, Any]:
     Get the current user information including username and home directory.
 
     This tool helps the agent understand the actual user context instead of using
-    hardcoded paths like /home/user.
+    hardcoded paths like /home/user. Uses execute_bash to get user information.
 
     Returns:
         A dictionary with username, home directory, and current working directory.
     """
-    username = os.getenv("USER") or os.getenv("USERNAME") or "unknown"
-    home_dir = str(Path.home())
-    current_dir = GLOBAL_CWD
+    # Get username using whoami command
+    username_result = execute_bash("whoami")
+    username = username_result.get("stdout", "").strip() if username_result.get("status") == "success" else "unknown"
+
+    # Get home directory using echo $HOME
+    home_result = execute_bash("echo $HOME")
+    home_dir = home_result.get("stdout", "").strip() if home_result.get("status") == "success" else str(Path.home())
+
+    # Get current working directory using pwd
+    pwd_result = execute_bash("pwd")
+    current_dir = pwd_result.get("stdout", "").strip() if pwd_result.get("status") == "success" else GLOBAL_CWD
 
     result: dict[str, Any] = {
         "username": username,
