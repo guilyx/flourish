@@ -18,7 +18,13 @@ The system is composed of several key Python packages:
 
 3. **`flourish.tools`**:
    - **Purpose**: Provides custom Python functions that the AI agent can call to interact with the bash environment and manage command lists.
-   - **Details**: Includes `execute_bash`, `set_cwd`, `add_to_allowlist`, `add_to_blacklist`, etc. These tools incorporate pre-execution validation against the allowlist/blacklist.
+   - **Details**: Organized into modular subdirectories by context:
+     - `tools/bash/`: Bash execution tools (`execute_bash`, `set_cwd`, `get_user`)
+     - `tools/config/`: Configuration and allowlist/blacklist management (`add_to_allowlist`, `add_to_blacklist`, `list_allowlist`, etc.)
+     - `tools/history/`: History-related tools (`read_bash_history`, `read_conversation_history`)
+     - `tools/system/`: System information tools (`get_current_datetime`)
+     - `tools/globals.py`: Shared global variables (`GLOBAL_CWD`, `GLOBAL_ALLOWLIST`, `GLOBAL_BLACKLIST`)
+   - All tools incorporate pre-execution validation against the allowlist/blacklist.
 
 4. **`flourish.runner`**:
    - **Purpose**: Orchestrates the interaction between the user, the AI agent, and the tools.
@@ -96,7 +102,7 @@ The security of Flourish is paramount, especially given its ability to execute a
 
 - **LiteLLM**: Allows easy switching between different LLM providers by changing the `MODEL` environment variable.
 - **Google ADK**: Provides the agent framework for orchestration, tool calling, and session management.
-- **Modular Tools**: New bash tools can be added by creating Python functions in `flourish.tools` and ensuring they are exposed to the agent.
+- **Modular Tools**: New tools can be added by creating Python functions in the appropriate `flourish.tools` subdirectory (e.g., `tools/bash/` for bash commands, `tools/system/` for system info) and ensuring they are exposed via `tools/__init__.py` and `get_bash_tools()`.
 - **Plugin System**: Extend functionality with custom plugins (command handlers and enhancers) - see `docs/plugins.md`.
 - **Completion System**: Add custom command completions by creating completion scripts in `completions/` or `~/.config/flourish/completions/`.
 - **Configuration**: The `config/commands.json` provides a flexible way to manage command restrictions.
