@@ -14,7 +14,7 @@ class ConfigManager:
         """Initialize config manager.
 
         Args:
-            config_file: Optional path to config file. Defaults to ~/.config/bash.ai/commands.json
+            config_file: Optional path to config file. Defaults to ~/.config/flourish/commands.json
         """
         if config_file:
             self.config_path = Path(config_file)
@@ -24,7 +24,7 @@ class ConfigManager:
             if project_config.exists():
                 self.config_path = project_config
             else:
-                config_dir = Path.home() / ".config" / "bash.ai"
+                config_dir = Path.home() / ".config" / "flourish"
                 config_dir.mkdir(parents=True, exist_ok=True)
                 self.config_path = config_dir / "commands.json"
 

@@ -43,6 +43,7 @@ from ..plugins.cd_completer import CdCompleter
 from ..plugins.enhancers import EnhancerManager, LsColorEnhancer, CdEnhancementPlugin
 from ..runner import run_agent
 from ..tools.tools import GLOBAL_CWD, set_allowlist_blacklist
+from .banner import print_banner
 
 # AI assistance trigger prefix
 AI_PREFIX = "?"
@@ -254,7 +255,7 @@ class BashCompleter(Completer):
                 # Special handling for cd - use enhanced completer with nested directory support
                 if command == "cd":
                     # Update cd completer's current directory dynamically
-                    if hasattr(self, 'get_current_dir'):
+                    if hasattr(self, "get_current_dir"):
                         self.cd_completer.cwd = self.get_current_dir()
                     else:
                         self.cd_completer.cwd = self.cwd
@@ -277,7 +278,7 @@ class BashCompleter(Completer):
             # Special handling for cd - use enhanced completer with nested directory support
             if command == "cd":
                 # Update cd completer's current directory dynamically
-                if hasattr(self, 'get_current_dir'):
+                if hasattr(self, "get_current_dir"):
                     self.cd_completer.cwd = self.get_current_dir()
                 else:
                     self.cd_completer.cwd = self.cwd
@@ -304,6 +305,7 @@ class TerminalApp:
         self.command_history: list[str] = []
         self.agent_task: asyncio.Task | None = None
         self.console = Console()
+        self.welcome_printed = False
 
         # Set global allowlist/blacklist for tools
         set_allowlist_blacklist(
@@ -330,7 +332,7 @@ class TerminalApp:
         self.history = InMemoryHistory()
 
         # Try to load history from file
-        history_file = Path.home() / ".config" / "bash.ai" / "history"
+        history_file = Path.home() / ".config" / "flourish" / "history"
         history_file.parent.mkdir(parents=True, exist_ok=True)
         try:
             self.history = FileHistory(str(history_file))
@@ -342,8 +344,11 @@ class TerminalApp:
 
         @self.kb.add("c-l")
         def clear_screen(event):
-            """Clear screen."""
+            """Clear screen but preserve welcome message."""
             event.app.output.write("\033[2J\033[H")
+            # Re-print welcome if it was printed before
+            if self.welcome_printed:
+                self.print_welcome()
 
         @self.kb.add("c-r")
         def reverse_search(event):
@@ -372,13 +377,13 @@ class TerminalApp:
         )
 
     def print_welcome(self):
-        """Print welcome message."""
-        print("\033[36m" + "bash.ai - AI-Enabled Terminal Environment" + "\033[0m")
-        print(
-            "\033[90m" + "Type commands directly, or use '?' prefix for AI assistance" + "\033[0m"
-        )
-        print("\033[90m" + "Press Ctrl+D to exit" + "\033[0m")
-        print()
+        """Print welcome message with banner."""
+        if not self.welcome_printed:
+            print_banner()
+            print("\033[90m" + "Type commands directly, or use '?' prefix for AI assistance" + "\033[0m")
+            print("\033[90m" + "Press Ctrl+D to exit" + "\033[0m")
+            print()
+            self.welcome_printed = True
 
     async def execute_command(self, cmd: str):
         """Execute a bash command."""
@@ -386,7 +391,12 @@ class TerminalApp:
 
         # Handle special built-in commands
         if cmd == "clear" or cmd == "cls":
+            # Clear screen but preserve welcome message
+            # Move cursor to line after welcome message
             print("\033[2J\033[H", end="")
+            # Re-print welcome if it was printed before
+            if self.welcome_printed:
+                self.print_welcome()
             return
 
         # Try plugins first
