@@ -29,7 +29,6 @@ dev = [
 
 [project.scripts]
 flourish = "bash_ai.ui.cli:main"
-flouri.sh = "bash_ai.ui.cli:main"
 
 [build-system]
 requires = ["hatchling"]

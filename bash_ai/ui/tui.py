@@ -1,4 +1,4 @@
-"""Terminal User Interface for bash.ai - AI-enabled terminal environment."""
+"""Terminal User Interface for Flourish - AI-enabled terminal environment."""
 
 import asyncio
 import os
