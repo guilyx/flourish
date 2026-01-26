@@ -1,6 +1,6 @@
-# Contributing to bash.ai
+# Contributing to Flourish
 
-Thank you for your interest in contributing to bash.ai! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to Flourish! This document provides guidelines and instructions for contributing.
 
 ## Code of Conduct
 
@@ -10,7 +10,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ### Reporting Bugs
 
-1. Check if the bug has already been reported in [Issues](https://github.com/made-after-dark/bash.ai/issues)
+1. Check if the bug has already been reported in [Issues](https://github.com/made-after-dark/flourish/issues)
 2. If not, create a new issue with:
    - A clear, descriptive title
    - Steps to reproduce the bug
@@ -20,7 +20,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ### Suggesting Features
 
-1. Check existing [Issues](https://github.com/made-after-dark/bash.ai/issues) and [Discussions](https://github.com/made-after-dark/bash.ai/discussions)
+1. Check existing [Issues](https://github.com/made-after-dark/flourish/issues) and [Discussions](https://github.com/made-after-dark/flourish/discussions)
 2. Create a new issue or discussion thread with:
    - A clear description of the feature
    - Use cases and examples
@@ -30,8 +30,8 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 1. **Fork the repository**
    ```bash
-   git clone https://github.com/your-username/bash.ai.git
-   cd bash.ai
+   git clone https://github.com/your-username/flourish.git
+   cd flourish
    ```
 
 2. **Create a feature branch**
@@ -122,7 +122,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 ## Project Structure
 
 ```
-bash.ai/
+flourish/
 ├── bash_ai/              # Main package
 │   ├── __init__.py
 │   ├── agent/            # Agent definitions
@@ -144,9 +144,9 @@ bash.ai/
 └── ...
 ```
 
-## Extending bash.ai with Plugins
+## Extending Flourish with Plugins
 
-bash.ai has a powerful plugin system that allows you to add custom commands, aliases, and behaviors. See [docs/plugins.md](docs/plugins.md) for detailed information on creating plugins.
+Flourish has a powerful plugin system that allows you to add custom commands, aliases, and behaviors. See [docs/plugins.md](docs/plugins.md) for detailed information on creating plugins.
 
 ### Quick Plugin Example
 
@@ -157,10 +157,10 @@ from typing import Any
 class MyPlugin(Plugin):
     def name(self) -> str:
         return "my_plugin"
-    
+
     def should_handle(self, command: str) -> bool:
         return command.startswith("mycommand")
-    
+
     async def execute(self, command: str, cwd: str) -> dict[str, Any]:
         return {
             "handled": True,
@@ -180,8 +180,8 @@ For more details, see the [Plugin System Documentation](docs/plugins.md).
 
 ## Questions?
 
-- Open a [Discussion](https://github.com/made-after-dark/bash.ai/discussions)
-- Check existing [Issues](https://github.com/made-after-dark/bash.ai/issues)
+- Open a [Discussion](https://github.com/made-after-dark/flourish/discussions)
+- Check existing [Issues](https://github.com/made-after-dark/flourish/issues)
 - Reach out to maintainers
 
 Thank you for contributing to bash.ai! 🚀

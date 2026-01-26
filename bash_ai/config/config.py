@@ -1,4 +1,4 @@
-"""Configuration management for bash.ai."""
+"""Configuration management for Flourish."""
 
 import json
 import os

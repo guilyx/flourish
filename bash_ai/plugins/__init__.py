@@ -1,4 +1,4 @@
-"""Plugin system for bash.ai."""
+"""Plugin system for Flourish."""
 
 from .base import Plugin, PluginManager
 from .cd_completer import CdCompleter

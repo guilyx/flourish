@@ -1,4 +1,4 @@
-"""CLI interface for bash.ai."""
+"""CLI interface for Flourish."""
 
 import sys
 
@@ -74,7 +74,7 @@ def agent_command(prompt: str, allowlist: str | None, blacklist: str | None, str
                 """Callback for streaming text chunks."""
                 console.print(text, end="", markup=False)
 
-            response = run_agent_live_sync  (
+            response = run_agent_live_sync(
                 prompt,
                 allowed_commands=allowed_commands,
                 blacklisted_commands=blacklisted_commands,

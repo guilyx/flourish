@@ -30,12 +30,12 @@ The system is composed of several key Python packages:
 
 6. **`bash_ai.logging`**:
    - **Purpose**: Manages structured logging for sessions, conversations, and tool executions.
-   - **Details**: Creates timestamped log files in `~/.config/bash.ai/logs/` and records detailed events for debugging and auditing.
+   - **Details**: Creates timestamped log files in `~/.config/flourish/logs/` and records detailed events for debugging and auditing.
 
 ## Data Flow and Interaction
 
 1. **Initialization**:
-   - The `bash.ai` application starts (either TUI or CLI).
+   - The Flourish application starts (either TUI or CLI).
    - `bash_ai.config` loads settings from `.env` and `config/commands.json`.
    - `bash_ai.logging` initializes a new session log file.
 
@@ -71,7 +71,7 @@ The system is composed of several key Python packages:
 
 ## Security Model
 
-The security of `bash.ai` is paramount, especially given its ability to execute arbitrary shell commands.
+The security of Flourish is paramount, especially given its ability to execute arbitrary shell commands.
 
 - **Allowlist/Blacklist**: The core security mechanism.
   - **Blacklist**: Commands explicitly forbidden (e.g., `rm`, `dd`). These are hard-blocked.
@@ -79,7 +79,7 @@ The security of `bash.ai` is paramount, especially given its ability to execute 
   - **Pre-execution Validation**: All commands are validated *before* execution by the `bash_ai.tools` module.
 - **User Confirmation**: For commands not in the allowlist (when an allowlist is active), the system requires explicit user confirmation before execution. This is handled by the system, not the agent, to prevent the agent from bypassing security.
 - **Automated Allowlist Management**: The agent is instructed to proactively add safe, frequently used commands to the allowlist (after system-level confirmation for the add operation), improving workflow efficiency while maintaining security.
-- **Permissions**: The agent operates with the same user permissions as the `bash.ai` application itself. It does not elevate privileges.
+- **Permissions**: The agent operates with the same user permissions as the Flourish application itself. It does not elevate privileges.
 - **API Key Security**: API keys are loaded from `.env` files and never committed to version control.
 
 ## Extensibility

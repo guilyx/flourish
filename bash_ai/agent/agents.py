@@ -1,4 +1,4 @@
-"""Agent definitions for bash.ai."""
+"""Agent definitions for Flourish."""
 
 import os
 
@@ -32,7 +32,7 @@ Execute terminal commands to accomplish tasks. Provide chain of thoughts explain
 
 ## Security
 
-Never ask for confirmation. The system handles security checks automatically. Execute commands directly when appropriate.
+Never ask for confirmation. The system handles security checks automatically. Execute commands directly when appropriate. Provide output of commands.
 """
 
     return instruction

@@ -1,4 +1,4 @@
-"""Configuration file management for bash.ai."""
+"""Configuration file management for Flourish."""
 
 import json
 from pathlib import Path
@@ -8,7 +8,7 @@ from .config import get_settings
 
 
 class ConfigManager:
-    """Manages persistent configuration for bash.ai."""
+    """Manages persistent configuration for Flourish."""
 
     def __init__(self, config_file: str | None = None):
         """Initialize config manager.

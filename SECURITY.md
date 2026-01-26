@@ -18,12 +18,12 @@ We release patches for security vulnerabilities. Which versions are eligible for
 
 1. **Use Allowlists**: Always use the `--allowlist` flag in production or sensitive environments:
    ```bash
-   bash-ai agent --allowlist "ls,cd,git" "Safe task"
+   flourish agent --allowlist "ls,cd,git" "Safe task"
    ```
 
 2. **Use Blacklists**: Prevent dangerous commands:
    ```bash
-   bash-ai agent --blacklist "rm,dd,format,mkfs" "Task"
+   flourish agent --blacklist "rm,dd,format,mkfs" "Task"
    ```
 
 3. **Review Before Execution**: The agent will explain what it plans to do. Review carefully before confirming.

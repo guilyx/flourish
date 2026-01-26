@@ -1,4 +1,4 @@
-"""Logging module for bash.ai."""
+"""Logging module for Flourish."""
 
 from .logger import (
     get_session_dir,

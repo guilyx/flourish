@@ -1,4 +1,4 @@
-"""Command enhancement plugins for bash.ai."""
+"""Command enhancement plugins for Flourish."""
 
 import os
 import stat

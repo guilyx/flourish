@@ -1,4 +1,4 @@
-"""Zsh-like bindings plugin for bash.ai."""
+"""Zsh-like bindings plugin for Flourish."""
 
 import os
 from pathlib import Path

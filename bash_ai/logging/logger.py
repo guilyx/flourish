@@ -1,4 +1,4 @@
-"""Logging utilities for bash.ai."""
+"""Logging utilities for Flourish."""
 
 import json
 import logging
@@ -73,7 +73,7 @@ def _setup_conversation_logger() -> logging.Logger:
         return _conversation_logger
 
     # Create logger
-    logger = logging.getLogger("bash_ai.conversation")
+    logger = logging.getLogger("flourish.conversation")
     logger.setLevel(logging.INFO)
 
     # Clear any existing handlers
@@ -117,7 +117,7 @@ def _setup_terminal_logger() -> logging.Logger:
         return _terminal_logger
 
     # Create logger
-    logger = logging.getLogger("bash_ai.terminal")
+    logger = logging.getLogger("flourish.terminal")
     logger.setLevel(logging.INFO)
 
     # Clear any existing handlers

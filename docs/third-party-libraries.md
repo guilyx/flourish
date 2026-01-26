@@ -1,6 +1,6 @@
-# Third-Party Libraries Used in bash.ai
+# Third-Party Libraries Used in Flourish
 
-This document outlines the key third-party libraries used in the `bash.ai` project, their purpose, and licensing information.
+This document outlines the key third-party libraries used in the Flourish project, their purpose, and licensing information.
 
 ## Core Dependencies
 
@@ -30,7 +30,7 @@ This document outlines the key third-party libraries used in the `bash.ai` proje
 
 ### LiteLLM
 
-**Purpose**: LiteLLM provides a unified interface to interact with multiple LLM providers, including OpenAI, Anthropic, Google, and many others. This allows `bash.ai` to support various models without provider-specific code.
+**Purpose**: LiteLLM provides a unified interface to interact with multiple LLM providers, including OpenAI, Anthropic, Google, and many others. This allows Flourish to support various models without provider-specific code.
 
 **Why it's used**: Instead of being locked into a single provider (like Google ADK), LiteLLM enables users to choose their preferred LLM provider by simply changing the `MODEL` environment variable.
 
@@ -67,7 +67,7 @@ This document outlines the key third-party libraries used in the `bash.ai` proje
 
 ## License Compatibility
 
-All dependencies use permissive licenses (MIT, BSD, Apache-2.0) that are compatible with the Apache License 2.0 used by `bash.ai`.
+All dependencies use permissive licenses (MIT, BSD, Apache-2.0) that are compatible with the Apache License 2.0 used by Flourish.
 
 ## Updating Dependencies
 

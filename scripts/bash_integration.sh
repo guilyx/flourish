@@ -1,5 +1,5 @@
 #!/bin/bash
-# Bash integration script for bash.ai
+# Bash integration script for Flourish
 # Add this to your ~/.bashrc or ~/.zshrc
 
 # Function to provide AI-powered command suggestions
@@ -9,13 +9,13 @@ _bash_ai_suggest() {
         return
     fi
 
-    # Check if bash-ai is available
-    if ! command -v bash-ai &> /dev/null; then
+    # Check if flourish is available
+    if ! command -v flourish &> /dev/null; then
         return
     fi
 
     # Get AI suggestion (non-blocking, runs in background)
-    (bash-ai "Suggest the next command after: $command" 2>/dev/null) &
+    (flourish "Suggest the next command after: $command" 2>/dev/null) &
 }
 
 # Function to enhance command execution with AI
@@ -25,10 +25,10 @@ _bash_ai_enhance() {
 
     # If command failed, ask AI for help
     if [ "$exit_code" -ne 0 ]; then
-        if command -v bash-ai &> /dev/null; then
+        if command -v flourish &> /dev/null; then
             echo ""
             echo "💡 AI Suggestion:"
-            bash-ai "The command '$last_command' failed with exit code $exit_code. What might be wrong and how to fix it?" 2>/dev/null | head -5
+            flourish "The command '$last_command' failed with exit code $exit_code. What might be wrong and how to fix it?" 2>/dev/null | head -5
             echo ""
         fi
     fi
@@ -41,7 +41,7 @@ if [ -n "$BASH_VERSION" ]; then
 fi
 
 # Create convenient alias
-alias ai='bash-ai'
+alias ai='flourish'
 
 # Auto-completion helper
 _bash_ai_complete() {
@@ -53,7 +53,7 @@ _bash_ai_complete() {
 
 # Register completion (if available)
 if command -v complete &> /dev/null; then
-    complete -F _bash_ai_complete bash-ai
+    complete -F _bash_ai_complete flourish
 fi
 
-echo "bash.ai integration loaded. Use 'bash-ai' or 'ai' command."
+echo "Flourish integration loaded. Use 'flourish' or 'ai' command."

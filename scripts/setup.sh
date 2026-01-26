@@ -1,9 +1,9 @@
 #!/bin/bash
-# Setup script for bash.ai
+# Setup script for Flourish
 
 set -e
 
-echo "🚀 Setting up bash.ai..."
+echo "🚀 Setting up Flourish..."
 
 # Check for Python
 if ! command -v python3 &> /dev/null; then
@@ -61,17 +61,17 @@ uv sync
 echo "🔨 Installing bash-ai..."
 uv pip install -e .
 
-if command -v bash-ai &> /dev/null; then
-    echo "✅ Setup successful! bash-ai is ready to use."
+if command -v flourish &> /dev/null; then
+    echo "✅ Setup successful! Flourish is ready to use."
     echo ""
     echo "Next steps:"
     echo "1. Edit .env and add your GOOGLE_API_KEY"
-    echo "2. Try it out: bash-ai 'Hello, world!'"
+    echo "2. Try it out: flourish 'Hello, world!'"
     echo ""
     echo "To integrate with bash:"
     echo "  source scripts/bash_integration.sh"
     echo "  # or add to your ~/.bashrc or ~/.zshrc"
 else
-    echo "⚠️  bash-ai command not found in PATH"
-    echo "   You can run it with: uv run bash-ai"
+    echo "⚠️  flourish command not found in PATH"
+    echo "   You can run it with: uv run flourish"
 fi

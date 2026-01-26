@@ -1,4 +1,4 @@
-"""Tools module for bash.ai."""
+"""Tools module for Flourish."""
 
 from .tools import get_bash_tools
 

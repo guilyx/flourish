@@ -1,4 +1,4 @@
-"""Agent module for bash.ai."""
+"""Agent module for Flourish."""
 
 from .agents import build_agent_instruction, get_agent
 

@@ -1,4 +1,4 @@
-"""Configuration module for bash.ai."""
+"""Configuration module for Flourish."""
 
 from .config import Settings, get_settings
 from .config_manager import ConfigManager

@@ -1,1 +1,1 @@
-"""Tests for bash.ai."""
+"""Tests for Flourish."""

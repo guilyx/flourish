@@ -1,8 +1,8 @@
-# bash.ai
+# Flourish (flouri.sh)
 
-> AI-powered bash environment enhancement tool using LiteLLM
+> AI-powered terminal environment enhancement tool using LiteLLM
 
-`bash.ai` is an open-source tool that enhances your bash environment with agentic AI capabilities. It allows you to interact with various LLMs directly from your terminal and execute complex workflows through AI orchestration.
+Flourish is an open-source tool that enhances your terminal environment with agentic AI capabilities. It allows you to interact with various LLMs directly from your terminal and execute complex workflows through AI orchestration.
 
 ## Features
 
@@ -48,8 +48,8 @@ pyenv global 3.12.0
 
 1. **Install and configure**:
    ```bash
-   git clone https://github.com/made-after-dark/bash.ai.git
-   cd bash.ai
+   git clone https://github.com/made-after-dark/flourish.git
+   cd flourish
    python3.12 -m venv .venv
    source .venv/bin/activate
    pip install -e ".[dev]"
@@ -59,7 +59,7 @@ pyenv global 3.12.0
 
 2. **Launch the terminal**:
    ```bash
-   bash-ai
+   flourish
    ```
 
 3. **Start using it**:
@@ -76,8 +76,8 @@ pyenv global 3.12.0
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/made-after-dark/bash.ai.git
-   cd bash.ai
+   git clone https://github.com/made-after-dark/flourish.git
+   cd flourish
    ```
 
 2. Create and activate a virtual environment:
@@ -164,11 +164,11 @@ bash-ai agent -s "List files and show git status"  # Short form
 Add to your `~/.bashrc` or `~/.zshrc`:
 
 ```bash
-# Add bash-ai to PATH if installed locally
-export PATH=$PATH:/path/to/bash.ai/.venv/bin
+# Add flourish to PATH if installed locally
+export PATH=$PATH:/path/to/flourish/.venv/bin
 
 # Create convenient alias (optional)
-alias ai='bash-ai'
+alias ai='flourish'
 ```
 
 Then you can use:
@@ -195,7 +195,7 @@ The `.env` file is automatically loaded when you run the application - no need t
 
 ### Supported Models
 
-`bash.ai` uses [LiteLLM](https://litellm.ai/) for multi-provider support. You can use models from:
+Flourish uses [LiteLLM](https://litellm.ai/) for multi-provider support. You can use models from:
 
 - **OpenAI**: `gpt-4o-mini`, `gpt-4`, `gpt-3.5-turbo`, etc.
 - **Anthropic**: `claude-3-opus-20240229`, `claude-3-sonnet-20240229`, etc.
@@ -268,7 +268,7 @@ ruff format .
 ## Project Structure
 
 ```
-bash.ai/
+flourish/
 ├── .github/              # GitHub Actions workflows
 ├── bash_ai/              # Main application source code
 │   ├── agent/            # Agent definitions and logic
@@ -295,11 +295,11 @@ bash.ai/
 └── LICENSE               # License file
 ```
 
-## Extending bash.ai
+## Extending Flourish
 
 ### Plugin System
 
-bash.ai includes a powerful plugin system that allows you to add custom commands, aliases, and behaviors. Create plugins to:
+Flourish includes a powerful plugin system that allows you to add custom commands, aliases, and behaviors. Create plugins to:
 
 - Add command aliases (e.g., `ll` -> `ls -la`)
 - Implement zsh-like features (e.g., `cd ...` to go back directories)
@@ -347,5 +347,5 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## Support
 
-- Issues: [GitHub Issues](https://github.com/made-after-dark/bash.ai/issues)
-- Discussions: [GitHub Discussions](https://github.com/made-after-dark/bash.ai/discussions)
+- Issues: [GitHub Issues](https://github.com/made-after-dark/flourish/issues)
+- Discussions: [GitHub Discussions](https://github.com/made-after-dark/flourish/discussions)

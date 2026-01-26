@@ -1,11 +1,11 @@
-"""Base plugin system for bash.ai."""
+"""Base plugin system for Flourish."""
 
 from abc import ABC, abstractmethod
 from typing import Any
 
 
 class Plugin(ABC):
-    """Base class for bash.ai plugins."""
+    """Base class for Flourish plugins."""
 
     @abstractmethod
     def name(self) -> str:

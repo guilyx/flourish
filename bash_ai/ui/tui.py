@@ -38,6 +38,7 @@ from ..logging import (
     log_terminal_error,
     log_terminal_output,
 )
+from ..completions import CompletionLoader, CompletionRegistry
 from ..plugins import PluginManager, ZshBindingsPlugin
 from ..plugins.cd_completer import CdCompleter
 from ..plugins.enhancers import EnhancerManager, LsColorEnhancer, CdEnhancementPlugin
@@ -165,54 +166,56 @@ def format_prompt(cwd: Path):
 class BashCompleter(Completer):
     """Custom completer for bash commands with context-aware completion."""
 
-    def __init__(self, cwd: Path | None = None):
+    def __init__(self, cwd: Path | None = None, completion_registry: CompletionRegistry | None = None):
         """Initialize the bash completer.
 
         Args:
             cwd: Current working directory for path completions.
+            completion_registry: Optional completion registry for bash-completion style completions.
         """
         self.cwd = cwd or Path.cwd()
         self.command_completer = FuzzyCompleter(WordCompleter(BASH_COMMANDS, ignore_case=True))
         self.path_completer = PathCompleter()
         self.cd_completer = CdCompleter(cwd=self.cwd)
-        # Git subcommands
-        self.git_commands = [
-            "add",
-            "commit",
-            "push",
-            "pull",
-            "status",
-            "log",
-            "branch",
-            "checkout",
-            "merge",
-            "rebase",
-            "stash",
-            "diff",
-            "show",
-            "reset",
-            "revert",
-            "clone",
-            "init",
-            "remote",
-            "fetch",
-        ]
+        self.completion_registry = completion_registry or CompletionRegistry()
         # Commands that take directory arguments
         self.directory_commands = {"cd", "ls", "mkdir", "rmdir", "find", "grep"}
         # Commands that take file arguments
         self.file_commands = {"cat", "less", "more", "head", "tail", "grep", "rm", "mv", "cp"}
 
-    def _get_git_completions(self, document, complete_event):
-        """Get git subcommand completions."""
-        text = document.text_before_cursor
-        parts = text.split()
+    def _get_registered_completions(self, document, complete_event, command: str):
+        """Get completions from registered completion functions.
 
-        if len(parts) == 2 and parts[0] == "git":
-            # Suggest git subcommands
-            word = parts[1].lower()
-            for cmd in self.git_commands:
-                if cmd.startswith(word):
-                    yield Completion(cmd, start_position=-len(word), display=cmd)
+        Args:
+            document: The document being completed
+            complete_event: The completion event
+            command: The command name
+
+        Yields:
+            Completion objects
+        """
+        completion_func = self.completion_registry.get_completion(command)
+        if completion_func:
+            text_before = document.text_before_cursor
+            text = text_before.strip()
+            parts = text.split()
+
+            # Determine current word and index
+            if parts:
+                # Find which word we're completing
+                word_index = len(parts) - 1
+                current_word = parts[-1] if parts else ""
+            else:
+                word_index = 0
+                current_word = ""
+
+            try:
+                completions = completion_func.func(current_word, parts, word_index)
+                for completion in completions:
+                    yield completion
+            except Exception:
+                # If completion function fails, fall back to default
+                pass
 
     def _is_command_complete(self, command: str) -> bool:
         """Check if a command string is a complete known command."""
@@ -226,18 +229,12 @@ class BashCompleter(Completer):
         text = text_before.strip()
         parts = text.split()
 
-        # Handle git commands
-        if parts and parts[0] == "git":
-            if len(parts) == 1:
-                # Just "git" - suggest git subcommands
-                yield from self._get_git_completions(document, complete_event)
-            elif len(parts) == 2:
-                # "git <subcommand>" - suggest git subcommands
-                yield from self._get_git_completions(document, complete_event)
-            else:
-                # "git <subcommand> <args>" - suggest paths/files
-                yield from self.path_completer.get_completions(document, complete_event)
-            return
+        # Handle commands with registered completions
+        if parts and parts[0]:
+            command = parts[0].lower()
+            if self.completion_registry.has_completion(command):
+                yield from self._get_registered_completions(document, complete_event, command)
+                return
 
         # Empty input - only show commands
         if not text:
@@ -325,9 +322,18 @@ class TerminalApp:
         self.enhancer_manager.register(LsColorEnhancer())
         self.enhancer_manager.register(CdEnhancementPlugin())
 
+        # Setup completion system (bash-completion style)
+        self.completion_registry = CompletionRegistry()
+        self.completion_loader = CompletionLoader(self.completion_registry)
+        # Load default completions
+        self.completion_loader.load_default_completions()
+        # Register built-in git completion
+        from ..completions.git import complete_git
+        self.completion_registry.register("git", complete_git, "Git command completion")
+
         # Setup prompt_toolkit
         # Pass a function to get current directory dynamically
-        self.completer = BashCompleter(cwd=self.current_dir)
+        self.completer = BashCompleter(cwd=self.current_dir, completion_registry=self.completion_registry)
         self.completer.get_current_dir = lambda: self.current_dir
         self.history = InMemoryHistory()
 
@@ -380,7 +386,11 @@ class TerminalApp:
         """Print welcome message with banner."""
         if not self.welcome_printed:
             print_banner()
-            print("\033[90m" + "Type commands directly, or use '?' prefix for AI assistance" + "\033[0m")
+            print(
+                "\033[90m"
+                + "Type commands directly, or use '?' prefix for AI assistance"
+                + "\033[0m"
+            )
             print("\033[90m" + "Press Ctrl+D to exit" + "\033[0m")
             print()
             self.welcome_printed = True

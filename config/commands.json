@@ -16,13 +16,27 @@
     "head",
     "tail",
     "apt",
-    "apt-get"
+    "apt-get",
+    "seq",
+    "sleep",
+    "ping",
+    "traceroute",
+    "netstat",
+    "ss",
+    "iptables",
+    "ip6tables",
+    "ip6tables-restore",
+    "mkdir",
+    "nc",
+    "nmap",
+    "telnet"
   ],
   "blacklist": [
     "rm",
     "dd",
     "format",
     "mkfs",
+    "sudo",
     "chmod 777"
   ]
 }

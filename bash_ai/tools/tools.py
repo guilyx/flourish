@@ -1,4 +1,4 @@
-"""Custom tools for bash.ai agent."""
+"""Custom tools for Flourish agent."""
 
 import os
 import subprocess
@@ -41,15 +41,27 @@ def get_user() -> dict[str, Any]:
     """
     # Get username using whoami command
     username_result = execute_bash("whoami")
-    username = username_result.get("stdout", "").strip() if username_result.get("status") == "success" else "unknown"
+    username = (
+        username_result.get("stdout", "").strip()
+        if username_result.get("status") == "success"
+        else "unknown"
+    )
 
     # Get home directory using echo $HOME
     home_result = execute_bash("echo $HOME")
-    home_dir = home_result.get("stdout", "").strip() if home_result.get("status") == "success" else str(Path.home())
+    home_dir = (
+        home_result.get("stdout", "").strip()
+        if home_result.get("status") == "success"
+        else str(Path.home())
+    )
 
     # Get current working directory using pwd
     pwd_result = execute_bash("pwd")
-    current_dir = pwd_result.get("stdout", "").strip() if pwd_result.get("status") == "success" else GLOBAL_CWD
+    current_dir = (
+        pwd_result.get("stdout", "").strip()
+        if pwd_result.get("status") == "success"
+        else GLOBAL_CWD
+    )
 
     result: dict[str, Any] = {
         "username": username,

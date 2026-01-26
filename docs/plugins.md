@@ -1,10 +1,10 @@
 # Plugin System
 
-The bash.ai plugin system allows you to extend the terminal environment with custom commands, aliases, and behaviors. This document explains how the plugin system works and how to create your own plugins.
+The Flourish plugin system allows you to extend the terminal environment with custom commands, aliases, and behaviors. This document explains how the plugin system works and how to create your own plugins.
 
 ## Overview
 
-bash.ai has two types of plugins:
+Flourish has two types of plugins:
 
 1. **Command Handlers**: Plugins that completely handle command execution (e.g., zsh bindings)
 2. **Command Enhancers**: Plugins that enhance/enrich command output without replacing execution (e.g., colored ls output)
@@ -41,7 +41,7 @@ The `PluginManager` manages registered plugins and tries them in order when a co
 Create a new file in `bash_ai/plugins/` (e.g., `my_plugin.py`):
 
 ```python
-"""My custom plugin for bash.ai."""
+"""My custom plugin for Flourish."""
 
 from pathlib import Path
 from typing import Any
@@ -332,7 +332,7 @@ self.enhancer_manager.register(MyEnhancer())
 
 ### Built-in Enhancers
 
-bash.ai includes several built-in enhancers:
+Flourish includes several built-in enhancers:
 
 #### LsColorEnhancer
 
@@ -399,7 +399,7 @@ class ColorfulOutputEnhancer(CommandEnhancer):
 
 - Check existing plugins in `bash_ai/plugins/` for examples
 - Check existing enhancers in `bash_ai/plugins/enhancers.py` for enhancement examples
-- Open a [Discussion](https://github.com/made-after-dark/bash.ai/discussions) for questions
+- Open a [Discussion](https://github.com/made-after-dark/flourish/discussions) for questions
 - Review [CONTRIBUTING.md](../CONTRIBUTING.md) for general contribution guidelines
 
 Happy plugin development! 🚀
