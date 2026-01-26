@@ -253,8 +253,11 @@ class BashCompleter(Completer):
                 command = parts[0].lower()
                 # Special handling for cd - use enhanced completer with nested directory support
                 if command == "cd":
-                    # Update cd completer's current directory
-                    self.cd_completer.cwd = self.cwd
+                    # Update cd completer's current directory dynamically
+                    if hasattr(self, 'get_current_dir'):
+                        self.cd_completer.cwd = self.get_current_dir()
+                    else:
+                        self.cd_completer.cwd = self.cwd
                     yield from self.cd_completer.get_completions(document, complete_event)
                 elif command in self.directory_commands:
                     yield from self.path_completer.get_completions(document, complete_event)
@@ -273,8 +276,11 @@ class BashCompleter(Completer):
             command = parts[0].lower()
             # Special handling for cd - use enhanced completer with nested directory support
             if command == "cd":
-                # Update cd completer's current directory
-                self.cd_completer.cwd = self.cwd
+                # Update cd completer's current directory dynamically
+                if hasattr(self, 'get_current_dir'):
+                    self.cd_completer.cwd = self.get_current_dir()
+                else:
+                    self.cd_completer.cwd = self.cwd
                 yield from self.cd_completer.get_completions(document, complete_event)
             # For other directory commands, suggest directories
             elif command in self.directory_commands:
@@ -318,7 +324,9 @@ class TerminalApp:
         self.enhancer_manager.register(CdEnhancementPlugin())
 
         # Setup prompt_toolkit
+        # Pass a function to get current directory dynamically
         self.completer = BashCompleter(cwd=self.current_dir)
+        self.completer.get_current_dir = lambda: self.current_dir
         self.history = InMemoryHistory()
 
         # Try to load history from file
@@ -366,7 +374,9 @@ class TerminalApp:
     def print_welcome(self):
         """Print welcome message."""
         print("\033[36m" + "bash.ai - AI-Enabled Terminal Environment" + "\033[0m")
-        print("\033[90m" + "Type commands directly, or use '?' prefix for AI assistance" + "\033[0m")
+        print(
+            "\033[90m" + "Type commands directly, or use '?' prefix for AI assistance" + "\033[0m"
+        )
         print("\033[90m" + "Press Ctrl+D to exit" + "\033[0m")
         print()
 
@@ -487,7 +497,7 @@ class TerminalApp:
         for match in matches:
             # Print text before code block
             if match.start() > last_end:
-                text_before = response[last_end:match.start()].strip()
+                text_before = response[last_end : match.start()].strip()
                 if text_before:
                     self.console.print(Markdown(text_before))
 
