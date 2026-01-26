@@ -160,12 +160,12 @@ def execute_bash(cmd: str, tool_context: ToolContext | None = None) -> dict:
     if GLOBAL_BLACKLIST:
         for blacklisted in GLOBAL_BLACKLIST:
             if blacklisted in base_cmd or base_cmd in blacklisted:
-                blocked_result: dict[str, Any] = {
+                final_blocked_result: dict[str, Any] = {
                     "status": "blocked",
                     "message": f"Command '{base_cmd}' is blacklisted and cannot be executed",
                 }
-                log_tool_call("execute_bash", {"cmd": cmd}, blocked_result, success=False)
-                return blocked_result
+                log_tool_call("execute_bash", {"cmd": cmd}, final_blocked_result, success=False)
+                return final_blocked_result
 
     # Execute the command
     try:
@@ -506,6 +506,75 @@ def is_in_blacklist(command: str) -> dict:
     return result
 
 
+def read_history(limit: int = 50) -> dict[str, Any]:
+    """
+    Read command history from the Flourish history file.
+
+    This tool allows the agent to see what commands have been executed previously,
+    which can help understand user workflow and context.
+
+    Args:
+        limit: Maximum number of history entries to return (default: 50, max: 1000).
+
+    Returns:
+        A dictionary with status, history entries, and count.
+    """
+    history_file = Path.home() / ".config" / "flourish" / "history"
+
+    # Validate limit
+    if limit < 1:
+        limit = 1
+    if limit > 1000:
+        limit = 1000
+
+    result: dict[str, Any] = {
+        "status": "success",
+        "history_file": str(history_file),
+        "entries": [],
+        "count": 0,
+    }
+
+    try:
+        if not history_file.exists():
+            result["message"] = "History file does not exist yet"
+            log_tool_call("read_history", {"limit": limit}, result, success=True)
+            return result
+
+        # Read history file (prompt-toolkit FileHistory format: one command per line)
+        with open(history_file, encoding="utf-8") as f:
+            lines = f.readlines()
+
+        # Filter out empty lines and get unique commands (most recent first)
+        commands = []
+        seen = set()
+        for line in reversed(lines):  # Start from most recent
+            cmd = line.strip()
+            if cmd and cmd not in seen:
+                commands.append(cmd)
+                seen.add(cmd)
+                if len(commands) >= limit:
+                    break
+
+        # Reverse to show oldest first (or keep newest first - let's keep newest first)
+        result["entries"] = commands
+        result["count"] = len(commands)
+        result["message"] = f"Retrieved {len(commands)} history entries"
+
+    except PermissionError:
+        result["status"] = "error"
+        result["message"] = "Permission denied reading history file"
+        log_tool_call("read_history", {"limit": limit}, result, success=False)
+        return result
+    except Exception as e:
+        result["status"] = "error"
+        result["message"] = f"Error reading history: {str(e)}"
+        log_tool_call("read_history", {"limit": limit}, result, success=False)
+        return result
+
+    log_tool_call("read_history", {"limit": limit}, result, success=True)
+    return result
+
+
 def get_bash_tools(allowlist: list[str] | None = None, blacklist: list[str] | None = None):
     """Get bash execution tools for the agent (Google ADK format).
 
@@ -532,6 +601,7 @@ def get_bash_tools(allowlist: list[str] | None = None, blacklist: list[str] | No
         list_blacklist,
         is_in_allowlist,
         is_in_blacklist,
+        read_history,
     ]
 
     return tools
