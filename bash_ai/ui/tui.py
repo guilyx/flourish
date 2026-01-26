@@ -4,11 +4,21 @@ import asyncio
 import os
 import subprocess
 from pathlib import Path
+from typing import Any
 
-from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal, VerticalScroll
-from textual.events import Key
-from textual.widgets import Footer, Header, Input, Static
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import (
+    Completer,
+    FuzzyCompleter,
+    PathCompleter,
+    WordCompleter,
+)
+from prompt_toolkit.history import FileHistory, InMemoryHistory
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.lexers import PygmentsLexer
+from prompt_toolkit.search import SearchDirection
+from prompt_toolkit.styles import Style
+from pygments.lexers.shell import BashLexer
 
 from ..config import get_settings
 from ..config.config_manager import ConfigManager
@@ -20,96 +30,202 @@ from ..logging import (
     log_terminal_output,
 )
 from ..runner import run_agent
-from ..tools.tools import GLOBAL_CWD, execute_bash, set_allowlist_blacklist
+from ..tools.tools import GLOBAL_CWD, set_allowlist_blacklist
 
 # AI assistance trigger prefix
 AI_PREFIX = "?"
 
+# Common bash commands for auto-completion
+BASH_COMMANDS = [
+    "ls",
+    "cd",
+    "pwd",
+    "cat",
+    "grep",
+    "find",
+    "git",
+    "docker",
+    "python",
+    "pip",
+    "npm",
+    "node",
+    "echo",
+    "mkdir",
+    "rm",
+    "cp",
+    "mv",
+    "chmod",
+    "chown",
+    "tar",
+    "zip",
+    "unzip",
+    "curl",
+    "wget",
+    "ssh",
+    "scp",
+    "rsync",
+    "ps",
+    "kill",
+    "top",
+    "htop",
+    "df",
+    "du",
+    "free",
+    "history",
+    "clear",
+    "exit",
+    "export",
+    "env",
+    "which",
+    "whereis",
+    "man",
+    "help",
+]
 
-class TerminalApp(App):
-    """AI-enabled terminal environment."""
 
-    CSS = """
-    Screen {
-        background: $surface;
-    }
+def get_git_branch(cwd: Path) -> str:
+    """Get the current git branch name."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=1,
+        )
+        if result.returncode == 0:
+            branch = result.stdout.strip()
+            return f"({branch})" if branch else ""
+    except Exception:
+        pass
+    return ""
 
-    .header {
-        text-align: center;
-        padding: 1;
-        background: $primary;
-        color: $text;
-        text-style: bold;
-    }
 
-    .terminal-output {
-        height: 1fr;
-        border: solid $primary;
-        padding: 1;
-        background: rgb(0, 0, 0);
-        color: rgb(200, 200, 200);
-    }
+def get_git_status(cwd: Path) -> str:
+    """Get git status indicator."""
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=1,
+        )
+        if result.returncode == 0:
+            if result.stdout.strip():
+                return "*"  # Has changes
+            return "+"  # Clean
+    except Exception:
+        pass
+    return ""
 
-    .terminal-line {
-        margin: 0;
-        padding: 0;
-    }
 
-    .command-line {
-        color: rgb(100, 200, 100);
-    }
+def format_prompt(cwd: Path) -> str:
+    """Format the terminal prompt with git info."""
+    try:
+        home = Path.home()
+        try:
+            rel_path = cwd.relative_to(home)
+            display_path = f"~/{rel_path}" if str(rel_path) != "." else "~"
+        except ValueError:
+            display_path = str(cwd)
+    except Exception:
+        display_path = str(cwd)
 
-    .output-line {
-        color: rgb(200, 200, 200);
-    }
+    git_branch = get_git_branch(cwd)
+    git_status = get_git_status(cwd) if git_branch else ""
 
-    .error-line {
-        color: rgb(255, 100, 100);
-    }
+    # Color codes for terminal
+    reset = "\033[0m"
+    cyan = "\033[36m"
+    green = "\033[32m"
+    yellow = "\033[33m"
+    blue = "\033[34m"
+    magenta = "\033[35m"
 
-    .ai-line {
-        color: rgb(150, 200, 255);
-    }
+    prompt_parts = []
+    prompt_parts.append(f"{cyan}{display_path}{reset}")
+    if git_branch:
+        prompt_parts.append(f"{magenta}{git_branch}{reset}")
+        if git_status:
+            prompt_parts.append(f"{yellow}{git_status}{reset}")
+    prompt_parts.append(f"{green}$ {reset}")
 
-    .prompt-line {
-        color: rgb(100, 150, 255);
-    }
+    return "".join(prompt_parts)
 
-    .input-area {
-        border-top: solid $primary;
-        padding: 0 1;
-        background: rgb(20, 20, 20);
-    }
 
-    #prompt-display {
-        width: auto;
-        padding-right: 1;
-    }
+class BashCompleter(Completer):
+    """Custom completer for bash commands with path completion and git commands."""
 
-    #command-input {
-        width: 1fr;
-        background: rgb(20, 20, 20);
-        color: rgb(200, 200, 200);
-    }
-    """
+    def __init__(self):
+        self.command_completer = FuzzyCompleter(WordCompleter(BASH_COMMANDS, ignore_case=True))
+        self.path_completer = PathCompleter()
+        # Git subcommands
+        self.git_commands = [
+            "add",
+            "commit",
+            "push",
+            "pull",
+            "status",
+            "log",
+            "branch",
+            "checkout",
+            "merge",
+            "rebase",
+            "stash",
+            "diff",
+            "show",
+            "reset",
+            "revert",
+            "clone",
+            "init",
+            "remote",
+            "fetch",
+        ]
 
-    BINDINGS = [
-        ("q", "quit", "Quit"),
-        ("ctrl+c", "quit", "Quit"),
-        ("ctrl+l", "clear_screen", "Clear"),
-        ("ctrl+a", "ask_ai", "Ask AI"),
-        ("?", "help", "Help"),
-    ]
+    def _get_git_completions(self, document, complete_event):
+        """Get git subcommand completions."""
+        text = document.text_before_cursor
+        parts = text.split()
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+        if len(parts) == 2 and parts[0] == "git":
+            # Suggest git subcommands
+            word = parts[1].lower()
+            for cmd in self.git_commands:
+                if cmd.startswith(word):
+                    yield Completion(cmd, start_position=-len(word), display=cmd)
+
+    def get_completions(self, document, complete_event):
+        text = document.text_before_cursor
+        parts = text.split()
+
+        # Check for git commands
+        if parts and parts[0] == "git":
+            yield from self._get_git_completions(document, complete_event)
+            return
+
+        if not parts:
+            # No input yet, suggest commands
+            yield from self.command_completer.get_completions(document, complete_event)
+        elif len(parts) == 1:
+            # First word - could be command or path
+            yield from self.command_completer.get_completions(document, complete_event)
+            # Also suggest paths
+            yield from self.path_completer.get_completions(document, complete_event)
+        else:
+            # After first word, suggest paths
+            yield from self.path_completer.get_completions(document, complete_event)
+
+
+class TerminalApp:
+    """AI-enabled terminal environment using prompt_toolkit."""
+
+    def __init__(self):
         self.config_manager = ConfigManager()
         self.current_allowlist = self.config_manager.get_allowlist()
         self.current_blacklist = self.config_manager.get_blacklist()
-        self.command_history: list[str] = []
-        self.history_index = -1
-        self.output_lines: list[tuple[str, str]] = []  # (content, class)
         self.current_dir = Path.cwd()
+        self.command_history: list[str] = []
         self.agent_task: asyncio.Task | None = None
 
         # Set global allowlist/blacklist for tools
@@ -118,136 +234,62 @@ class TerminalApp(App):
             blacklist=self.current_blacklist if self.current_blacklist else None,
         )
 
-    def compose(self) -> ComposeResult:
-        """Create child widgets for the app."""
-        yield Header(show_clock=True)
-        yield Static("🤖 bash.ai - AI-Enabled Terminal", classes="header")
-
-        # Terminal output area
-        with VerticalScroll(id="terminal-output", classes="terminal-output"):
-            yield Static(id="terminal-content")
-
-        # Input area with prompt
-        with Container(classes="input-area"):
-            with Horizontal():
-                yield Static(id="prompt-display")
-                yield Input(
-                    placeholder="",
-                    id="command-input",
-                )
-
-        yield Footer()
-
-    def on_mount(self):
-        """Called when app starts."""
         # Initialize session log
         initialize_session_log()
-        self.add_output_line("bash.ai - AI-Enabled Terminal Environment", "prompt-line")
-        self.add_output_line("Type commands directly, or use '?' prefix for AI assistance", "prompt-line")
-        self.add_output_line("Press Ctrl+A to ask AI, Ctrl+L to clear, ? for help", "prompt-line")
-        self.add_output_line("", "output-line")
-        self.update_prompt()
-        self.query_one("#command-input", Input).focus()
 
-    def update_prompt(self):
-        """Update the prompt display with current directory."""
+        # Setup prompt_toolkit
+        self.completer = BashCompleter()
+        self.history = InMemoryHistory()
+
+        # Try to load history from file
+        history_file = Path.home() / ".config" / "bash.ai" / "history"
+        history_file.parent.mkdir(parents=True, exist_ok=True)
         try:
-            # Get relative path from home or absolute if shorter
-            home = Path.home()
-            try:
-                rel_path = self.current_dir.relative_to(home)
-                display_path = f"~/{rel_path}" if str(rel_path) != "." else "~"
-            except ValueError:
-                display_path = str(self.current_dir)
-
-            prompt = f"[{display_path}] $ "
-            self.query_one("#prompt-display", Static).update(prompt)
+            self.history = FileHistory(str(history_file))
         except Exception:
-            self.query_one("#prompt-display", Static).update("$ ")
+            self.history = InMemoryHistory()
 
-    def add_output_line(self, content: str, css_class: str = "output-line"):
-        """Add a line to the terminal output."""
-        self.output_lines.append((content, css_class))
-        self.update_terminal_display()
+        # Create key bindings
+        self.kb = KeyBindings()
 
-    def update_terminal_display(self):
-        """Update the terminal content display."""
-        # Map CSS classes to Rich markup colors
-        color_map = {
-            "command-line": "[green]",
-            "output-line": "[white]",
-            "error-line": "[red]",
-            "ai-line": "[cyan]",
-            "prompt-line": "[blue]",
-        }
+        @self.kb.add("c-l")
+        def clear_screen(event):
+            """Clear screen."""
+            event.app.output.write("\033[2J\033[H")
 
-        lines = []
-        for content, css_class in self.output_lines:
-            if content:
-                # Use Rich markup for colors
-                color_tag = color_map.get(css_class, "[white]")
-                # Escape brackets in content to avoid Rich markup conflicts
-                escaped_content = content.replace("[", "\\[").replace("]", "\\]")
-                lines.append(f"{color_tag}{escaped_content}[/]")
-            else:
-                lines.append("")  # Empty line
+        @self.kb.add("c-r")
+        def reverse_search(event):
+            """Start reverse search (fzf-like)."""
+            # This will be handled by prompt_toolkit's built-in reverse search
+            pass
 
-        content = "\n".join(lines)
-        self.query_one("#terminal-content", Static).update(content)
-        # Scroll to bottom
-        terminal_output = self.query_one("#terminal-output", VerticalScroll)
-        terminal_output.scroll_end(animate=False)
+        # Create prompt session with enhanced features
+        self.session = PromptSession(
+            completer=self.completer,
+            history=self.history,
+            key_bindings=self.kb,
+            lexer=PygmentsLexer(BashLexer),
+            enable_history_search=True,  # Enable Ctrl+R for reverse search
+            search_ignore_case=True,  # Case-insensitive search
+            style=Style.from_dict(
+                {
+                    "completion-menu.completion": "bg:#008888 #ffffff",
+                    "completion-menu.completion.current": "bg:#00aaaa #000000",
+                    "scrollbar.background": "bg:#88aaaa",
+                    "scrollbar.button": "bg:#222222",
+                    "prompt": "ansicyan",
+                }
+            ),
+            complete_while_typing=True,  # Show completions while typing
+            complete_in_thread=True,  # Don't block on completions
+        )
 
-    async def on_input_submitted(self, event: Input.Submitted) -> None:
-        """Handle command input submission."""
-        input_widget = event.input
-        command = input_widget.value.strip()
-        input_widget.value = ""
-        self.history_index = -1
-
-        if not command:
-            return
-
-        # Add to command history
-        if self.command_history and self.command_history[-1] != command:
-            self.command_history.append(command)
-        elif not self.command_history:
-            self.command_history.append(command)
-
-        # Limit history size
-        if len(self.command_history) > 1000:
-            self.command_history.pop(0)
-
-        # Show the command that was entered
-        self.add_output_line(f"[{self._get_display_path()}] $ {command}", "command-line")
-
-        # Check if it's an AI request
-        if command.startswith(AI_PREFIX):
-            # Remove prefix and send to AI
-            ai_prompt = command[1:].strip()
-            if ai_prompt:
-                await self.handle_ai_request(ai_prompt)
-            else:
-                self.add_output_line("Usage: ? <your question>", "error-line")
-        else:
-            # Regular bash command
-            await self.execute_command(command)
-
-        # Update prompt and refocus input
-        self.update_prompt()
-        self.query_one("#command-input", Input).focus()
-
-    def _get_display_path(self) -> str:
-        """Get display path for prompt."""
-        try:
-            home = Path.home()
-            try:
-                rel_path = self.current_dir.relative_to(home)
-                return f"~/{rel_path}" if str(rel_path) != "." else "~"
-            except ValueError:
-                return str(self.current_dir)
-        except Exception:
-            return str(self.current_dir)
+    def print_welcome(self):
+        """Print welcome message."""
+        print("\033[36m" + "bash.ai - AI-Enabled Terminal Environment" + "\033[0m")
+        print("\033[90m" + "Type commands directly, or use '?' prefix for AI assistance" + "\033[0m")
+        print("\033[90m" + "Press Ctrl+D to exit" + "\033[0m")
+        print()
 
     async def execute_command(self, cmd: str):
         """Execute a bash command."""
@@ -255,8 +297,7 @@ class TerminalApp(App):
 
         # Handle special built-in commands
         if cmd == "clear" or cmd == "cls":
-            self.output_lines = []
-            self.update_terminal_display()
+            print("\033[2J\033[H", end="")
             return
 
         if cmd.startswith("cd "):
@@ -268,12 +309,11 @@ class TerminalApp(App):
                 if target.is_dir():
                     self.current_dir = target
                     os.chdir(str(self.current_dir))
-                    # Update global CWD in tools
                     GLOBAL_CWD = str(self.current_dir)
                 else:
-                    self.add_output_line(f"cd: {new_path}: No such file or directory", "error-line")
+                    print(f"\033[91mcd: {new_path}: No such file or directory\033[0m")
             except Exception as e:
-                self.add_output_line(f"cd: {str(e)}", "error-line")
+                print(f"\033[91mcd: {str(e)}\033[0m")
             return
 
         # Execute command using subprocess
@@ -297,15 +337,13 @@ class TerminalApp(App):
                 cwd=str(self.current_dir),
             )
 
-            # Display output
+            # Display output directly to terminal
             if stdout:
-                for line in stdout.rstrip().split("\n"):
-                    self.add_output_line(line, "output-line")
+                print(stdout, end="")
             if stderr:
-                for line in stderr.rstrip().split("\n"):
-                    self.add_output_line(line, "error-line")
+                print(stderr, end="", file=__import__("sys").stderr)
 
-            # Update directory if command changed it (e.g., cd in subshell)
+            # Update directory if command changed it
             try:
                 new_cwd = Path.cwd()
                 if new_cwd != self.current_dir:
@@ -315,13 +353,13 @@ class TerminalApp(App):
                 pass
 
         except Exception as e:
-            error_msg = f"Error executing command: {e}"
-            self.add_output_line(error_msg, "error-line")
+            error_msg = f"\033[91mError executing command: {e}\033[0m"
+            print(error_msg, file=__import__("sys").stderr)
             log_terminal_error(command=cmd, error=str(e), cwd=str(self.current_dir))
 
     async def handle_ai_request(self, prompt: str):
         """Handle an AI assistance request."""
-        self.add_output_line("🤖 AI is thinking...", "ai-line")
+        print("\033[96m🤖 AI is thinking...\033[0m")
 
         # Get current allowlist/blacklist
         allowlist = self.current_allowlist if self.current_allowlist else None
@@ -331,117 +369,74 @@ class TerminalApp(App):
         log_conversation("user", prompt)
 
         try:
-            # Run agent in background
+            # Run agent
             response = await run_agent(
                 prompt,
                 allowed_commands=allowlist,
                 blacklisted_commands=blacklist,
             )
 
-            # Remove thinking line and add response
-            if self.output_lines and self.output_lines[-1][0] == "🤖 AI is thinking...":
-                self.output_lines.pop()
-
             # Display AI response
+            print("\033[96m🤖\033[0m", end=" ")
             for line in response.split("\n"):
                 if line.strip():
-                    self.add_output_line(f"🤖 {line}", "ai-line")
+                    print(f"\033[96m{line}\033[0m")
                 else:
-                    self.add_output_line("", "ai-line")
+                    print()
 
         except Exception as e:
-            # Remove thinking line
-            if self.output_lines and self.output_lines[-1][0] == "🤖 AI is thinking...":
-                self.output_lines.pop()
-            error_msg = f"❌ AI Error: {e}"
-            self.add_output_line(error_msg, "error-line")
+            error_msg = f"\033[91m❌ AI Error: {e}\033[0m"
+            print(error_msg, file=__import__("sys").stderr)
 
-    def on_key(self, event: Key) -> None:
-        """Handle keyboard events."""
-        input_widget = self.query_one("#command-input", Input)
+    async def run(self):
+        """Run the terminal application."""
+        self.print_welcome()
 
-        if not input_widget.has_focus:
-            return
+        try:
+            while True:
+                try:
+                    # Get command from user
+                    command = await self.session.prompt_async(format_prompt(self.current_dir))
 
-        # Arrow up - previous command
-        if event.key == "up":
-            if self.command_history:
-                if self.history_index == -1:
-                    current_value = input_widget.value
-                    if current_value and current_value not in self.command_history:
-                        self.command_history.append(current_value)
-                    self.history_index = len(self.command_history) - 1
-                elif self.history_index > 0:
-                    self.history_index -= 1
+                    if not command.strip():
+                        continue
 
-                if 0 <= self.history_index < len(self.command_history):
-                    input_widget.value = self.command_history[self.history_index]
-                    input_widget.cursor_position = len(input_widget.value)
-                event.prevent_default()
+                    # Add to command history
+                    if self.command_history and self.command_history[-1] != command:
+                        self.command_history.append(command)
+                    elif not self.command_history:
+                        self.command_history.append(command)
 
-        # Arrow down - next command
-        elif event.key == "down":
-            if self.command_history and self.history_index >= 0:
-                if self.history_index < len(self.command_history) - 1:
-                    self.history_index += 1
-                    input_widget.value = self.command_history[self.history_index]
-                    input_widget.cursor_position = len(input_widget.value)
-                else:
-                    self.history_index = -1
-                    input_widget.value = ""
-                event.prevent_default()
+                    # Limit history size
+                    if len(self.command_history) > 1000:
+                        self.command_history.pop(0)
 
-        # Ctrl+L - Clear screen
-        elif event.key == "ctrl+l":
-            self.output_lines = []
-            self.update_terminal_display()
-            event.prevent_default()
+                    # Check if it's an AI request
+                    if command.startswith(AI_PREFIX):
+                        # Remove prefix and send to AI
+                        ai_prompt = command[1:].strip()
+                        if ai_prompt:
+                            await self.handle_ai_request(ai_prompt)
+                        else:
+                            print("\033[91mUsage: ? <your question>\033[0m")
+                    else:
+                        # Regular bash command
+                        await self.execute_command(command)
 
-    async def action_clear_screen(self):
-        """Clear the terminal screen."""
-        self.output_lines = []
-        self.update_terminal_display()
+                except KeyboardInterrupt:
+                    # Handle Ctrl+C
+                    print("^C")
+                    continue
+                except EOFError:
+                    # Handle Ctrl+D
+                    print("\n\033[90mExiting...\033[0m")
+                    break
 
-    async def action_ask_ai(self):
-        """Trigger AI assistance prompt."""
-        input_widget = self.query_one("#command-input", Input)
-        input_widget.value = f"{AI_PREFIX} "
-        input_widget.cursor_position = len(input_widget.value)
-        input_widget.focus()
-
-    async def action_help(self):
-        """Show help message."""
-        help_text = """
-bash.ai - AI-Enabled Terminal
-
-USAGE:
-  - Type commands directly to execute them (e.g., 'ls', 'pwd', 'git status')
-  - Use '?' prefix for AI assistance (e.g., '? explain git merge')
-  - Press Ctrl+A to start an AI prompt
-
-KEYBOARD SHORTCUTS:
-  - ↑/↓        Navigate command history
-  - Ctrl+L     Clear screen
-  - Ctrl+A     Ask AI
-  - ?          Show this help
-  - Q/Ctrl+C   Quit
-
-EXAMPLES:
-  $ ls -la
-  $ ? how do I check disk usage?
-  $ git status
-  $ ? explain the difference between merge and rebase
-        """
-        for line in help_text.strip().split("\n"):
-            self.add_output_line(line, "prompt-line")
-
-    async def action_quit(self):
-        """Quit the application."""
-        log_session_end()
-        self.exit()
+        finally:
+            log_session_end()
 
 
 def run_tui():
     """Run the terminal TUI application."""
     app = TerminalApp()
-    app.run()
+    asyncio.run(app.run())
