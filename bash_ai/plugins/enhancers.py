@@ -131,6 +131,9 @@ class LsColorEnhancer(CommandEnhancer):
                 "hints": [],
             }
 
+        # Check if it's ls -l format (long format)
+        is_long_format = "-l" in command or "--long" in command or command.startswith("ll")
+
         # Parse ls output and add colors
         lines = stdout.split("\n")
         enhanced_lines = []
@@ -140,23 +143,45 @@ class LsColorEnhancer(CommandEnhancer):
                 enhanced_lines.append(line)
                 continue
 
-            # For ls -l format, color the filename (last part)
-            if line.startswith(("d", "-", "l", "c", "b", "p", "s")) and len(line.split()) >= 9:
-                # ls -l format: permissions links owner group size date time name
+            if is_long_format:
+                # For ls -l format, color the filename (last part after date/time)
+                # Format: permissions links owner group size date time name
+                # Try to detect ls -l format: starts with file type char and has many fields
                 parts = line.split()
-                filename = " ".join(parts[8:])  # Handle filenames with spaces
-                filepath = Path(filename)
-                color = self._get_file_color(filepath, Path(cwd))
-                enhanced_line = line[: line.rfind(filename)] + color + filename + self.RESET
-                enhanced_lines.append(enhanced_line)
+                if len(parts) >= 9 and line[0] in ("d", "-", "l", "c", "b", "p", "s"):
+                    # ls -l format detected
+                    filename = " ".join(parts[8:])  # Handle filenames with spaces
+                    filepath = Path(filename)
+                    color = self._get_file_color(filepath, Path(cwd))
+                    # Find where filename starts in the original line
+                    filename_start = line.rfind(filename)
+                    if filename_start != -1:
+                        enhanced_line = line[:filename_start] + color + filename + self.RESET
+                        enhanced_lines.append(enhanced_line)
+                    else:
+                        enhanced_lines.append(line)
+                else:
+                    # Not ls -l format, treat as regular
+                    items = line.split()
+                    colored_items = []
+                    for item in items:
+                        filepath = Path(item)
+                        color = self._get_file_color(filepath, Path(cwd))
+                        colored_items.append(color + item + self.RESET)
+                    enhanced_lines.append("  ".join(colored_items))
             else:
                 # Regular ls format - color each item
                 items = line.split()
                 colored_items = []
                 for item in items:
-                    filepath = Path(item)
-                    color = self._get_file_color(filepath, Path(cwd))
-                    colored_items.append(color + item + self.RESET)
+                    # Skip ANSI codes if already present
+                    if "\033[" in item:
+                        colored_items.append(item)
+                    else:
+                        filepath = Path(item)
+                        color = self._get_file_color(filepath, Path(cwd))
+                        colored_items.append(color + item + self.RESET)
+                # Preserve spacing (ls typically uses 2 spaces between items)
                 enhanced_lines.append("  ".join(colored_items))
 
         enhanced_stdout = "\n".join(enhanced_lines)
