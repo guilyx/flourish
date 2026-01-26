@@ -25,6 +25,9 @@ from pygments.lexers.shell import BashLexer
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.syntax import Syntax
+from rich.spinner import Spinner
+from rich.live import Live
+from rich.text import Text
 
 from ..config import get_settings
 from ..config.config_manager import ConfigManager
@@ -513,8 +516,6 @@ class TerminalApp:
 
     async def handle_ai_request(self, prompt: str):
         """Handle an AI assistance request."""
-        self.console.print("[cyan]🤖 AI is thinking...[/cyan]")
-
         # Get current allowlist/blacklist
         allowlist = self.current_allowlist if self.current_allowlist else None
         blacklist = self.current_blacklist if self.current_blacklist else None
@@ -522,17 +523,26 @@ class TerminalApp:
         # Log user request
         log_conversation("user", prompt)
 
-        try:
-            # Run agent
-            response = await run_agent(
-                prompt,
-                allowed_commands=allowlist,
-                blacklisted_commands=blacklist,
-            )
+        # Create spinner animation
+        spinner_text = Text("🤖 ", style="cyan")
+        spinner = Spinner("dots", text=spinner_text, style="cyan")
 
-            # Display AI response with formatting
-            self.console.print("[cyan]🤖[/cyan]", end=" ")
-            self._format_response(response)
+        # Display spinner in a Live context
+        try:
+            with Live(spinner, console=self.console, refresh_per_second=10, transient=True):
+                # Run agent
+                response = await run_agent(
+                    prompt,
+                    allowed_commands=allowlist,
+                    blacklisted_commands=blacklist,
+                )
+        except Exception as e:
+            # Error will be handled below
+            raise
+
+        # Display AI response with formatting
+        self.console.print("[cyan]🤖[/cyan]", end=" ")
+        self._format_response(response)
 
         except Exception as e:
             self.console.print(f"[red]❌ AI Error: {e}[/red]")
