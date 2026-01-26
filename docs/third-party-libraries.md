@@ -6,13 +6,15 @@ This document outlines the key third-party libraries used in the Flourish projec
 
 | Library | Purpose | License | Version |
 |---------|---------|---------|---------|
-| [LiteLLM](https://litellm.ai/) | Unified interface for multiple LLM providers (OpenAI, Anthropic, Google, etc.) | MIT | >=1.40.0 |
+| [google-adk](https://github.com/google/generative-ai-python) | Google AI Development Kit for agent orchestration | Apache-2.0 | >=1.22.0 |
+| [LiteLLM](https://litellm.ai/) | Unified interface for multiple LLM providers (OpenAI, Anthropic, Google, etc.) | MIT | >=1.81.0 |
 | [python-dotenv](https://github.com/theskumar/python-dotenv) | Load environment variables from `.env` files | BSD-3-Clause | >=1.0.0 |
 | [pydantic](https://github.com/pydantic/pydantic) | Data validation using Python type annotations | MIT | >=2.5.0 |
 | [pydantic-settings](https://github.com/pydantic/pydantic-settings) | Settings management using Pydantic models | MIT | >=2.1.0 |
 | [click](https://github.com/pallets/click) | Command-line interface creation | BSD-3-Clause | >=8.1.0 |
 | [rich](https://github.com/Textualize/rich) | Rich text and beautiful formatting in the terminal | MIT | >=13.7.0 |
-| [textual](https://github.com/Textualize/textual) | Text User Interface (TUI) framework | MIT | >=0.60.0 |
+| [prompt-toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit) | Interactive terminal interface with completion and history | BSD-3-Clause | >=3.0.0 |
+| [pygments](https://pygments.org/) | Syntax highlighting library | BSD-2-Clause | >=2.15.0 |
 
 ## Development Dependencies
 
@@ -28,32 +30,51 @@ This document outlines the key third-party libraries used in the Flourish projec
 
 ## Key Libraries Explained
 
+### Google ADK
+
+**Purpose**: Google AI Development Kit provides the agent framework for orchestrating AI interactions, tool calling, session management, and streaming responses.
+
+**Why it's used**: Google ADK provides a robust foundation for building agentic applications with support for tools, planning, and multi-turn conversations. It handles the complex orchestration between the LLM and the tools that Flourish provides.
+
+**Documentation**: https://github.com/google/generative-ai-python
+
 ### LiteLLM
 
 **Purpose**: LiteLLM provides a unified interface to interact with multiple LLM providers, including OpenAI, Anthropic, Google, and many others. This allows Flourish to support various models without provider-specific code.
 
-**Why it's used**: Instead of being locked into a single provider (like Google ADK), LiteLLM enables users to choose their preferred LLM provider by simply changing the `MODEL` environment variable.
+**Why it's used**: Instead of being locked into a single provider, LiteLLM enables users to choose their preferred LLM provider by simply changing the `MODEL` environment variable. Google ADK uses LiteLLM as its model backend.
 
 **Documentation**: https://docs.litellm.ai/
 
-### Rich & Textual
+### Prompt-Toolkit
 
-**Purpose**: These libraries provide beautiful terminal output and interactive Text User Interfaces (TUIs).
+**Purpose**: Prompt-toolkit provides a powerful, cross-platform library for building interactive command-line applications with advanced features like auto-completion, syntax highlighting, and key bindings.
 
-- **Rich**: Handles formatting, colors, tables, and markdown rendering in the terminal.
-- **Textual**: Builds on Rich to create interactive, event-driven TUIs.
+**Why it's used**: It provides the foundation for Flourish's TUI, enabling rich terminal interactions including command completion, history navigation, and syntax highlighting. It's more flexible than Textual for this use case as it provides lower-level control over terminal interactions.
 
-**Why they're used**: They provide a modern, developer-friendly interface that's both functional and visually appealing.
+**Documentation**: https://python-prompt-toolkit.readthedocs.io/
 
-**Documentation**:
-- Rich: https://rich.readthedocs.io/
-- Textual: https://textual.textualize.io/
+### Pygments
+
+**Purpose**: Pygments is a syntax highlighting library that supports over 500 programming languages and markup formats.
+
+**Why it's used**: Used in conjunction with prompt-toolkit to provide syntax highlighting for shell commands and code snippets in the terminal interface.
+
+**Documentation**: https://pygments.org/
+
+### Rich
+
+**Purpose**: Rich provides beautiful terminal output with formatting, colors, tables, and markdown rendering.
+
+**Why it's used**: Used for formatting AI responses, displaying markdown content, and creating visually appealing output in both the TUI and CLI modes.
+
+**Documentation**: https://rich.readthedocs.io/
 
 ### Click
 
 **Purpose**: Click is a Python package for creating command-line interfaces.
 
-**Why it's used**: It provides a clean, declarative way to define CLI commands and options, making the codebase more maintainable.
+**Why it's used**: It provides a clean, declarative way to define CLI commands and options (like `flourish agent`), making the codebase more maintainable.
 
 **Documentation**: https://click.palletsprojects.com/
 
