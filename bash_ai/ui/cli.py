@@ -17,7 +17,7 @@ error_console = Console(file=sys.stderr, style="bold red")
 @click.version_option(version="0.1.0")
 @click.pass_context
 def cli(ctx):
-    """Bash.ai - AI-powered bash environment enhancement tool.
+    """Flourish - AI-powered terminal environment (flouri.sh).
 
     Run without arguments to launch the TUI, or use subcommands for CLI mode.
     """
@@ -74,7 +74,7 @@ def agent_command(prompt: str, allowlist: str | None, blacklist: str | None, str
                 """Callback for streaming text chunks."""
                 console.print(text, end="", markup=False)
 
-            response = run_agent_live_sync(
+            response = run_agent_live_sync  (
                 prompt,
                 allowed_commands=allowed_commands,
                 blacklisted_commands=blacklisted_commands,

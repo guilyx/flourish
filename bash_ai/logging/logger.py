@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 # Configure base logs directory
-BASE_LOGS_DIR = Path.home() / ".config" / "bash.ai" / "logs"
+BASE_LOGS_DIR = Path.home() / ".config" / "flourish" / "logs"
 BASE_LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Global logger instances and log files
@@ -52,7 +52,7 @@ def initialize_session_log() -> Path:
     session_start = {
         "timestamp": datetime.now().isoformat(),
         "event": "session_start",
-        "message": "Bash.ai session started",
+            "message": "Flourish session started",
     }
 
     conversation_logger.info(json.dumps(session_start))
@@ -303,7 +303,7 @@ def log_session_end() -> None:
     session_end = {
         "timestamp": datetime.now().isoformat(),
         "event": "session_end",
-        "message": "Bash.ai session ended",
+            "message": "Flourish session ended",
     }
 
     logger.info(json.dumps(session_end))

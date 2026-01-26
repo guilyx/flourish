@@ -26,7 +26,7 @@ def load_commands_config() -> dict[str, list[str]]:
             return json.load(f)
 
     # Fall back to user config directory
-    user_config_file = Path.home() / ".config" / "bash.ai" / "commands.json"
+    user_config_file = Path.home() / ".config" / "flourish" / "commands.json"
     if user_config_file.exists():
         with open(user_config_file) as f:
             return json.load(f)
@@ -68,7 +68,7 @@ class Settings:
             ]
 
         # Session configuration
-        self.app_name: str = os.getenv("APP_NAME", "bash.ai")
+        self.app_name: str = os.getenv("APP_NAME", "flourish")
         self.user_id: str = os.getenv("USER_ID", "user")
         self.session_id: str = os.getenv("SESSION_ID", "session")
 

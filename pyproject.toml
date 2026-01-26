@@ -1,5 +1,5 @@
 [project]
-name = "bash-ai"
+name = "flourish"
 version = "0.1.0"
 description = "AI-powered bash environment enhancement tool using Google ADK with LiteLLM for model abstraction"
 readme = "README.md"
@@ -28,7 +28,8 @@ dev = [
 ]
 
 [project.scripts]
-bash-ai = "bash_ai.ui.cli:main"
+flourish = "bash_ai.ui.cli:main"
+flouri.sh = "bash_ai.ui.cli:main"
 
 [build-system]
 requires = ["hatchling"]
