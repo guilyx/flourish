@@ -1,11 +1,7 @@
 """Tests for completion system."""
 
-from pathlib import Path
-from unittest.mock import MagicMock, patch
 
-import pytest
 from prompt_toolkit.completion import Completion
-from prompt_toolkit.document import Document
 
 from flourish.completions.loader import CompletionLoader
 from flourish.completions.registry import CompletionRegistry

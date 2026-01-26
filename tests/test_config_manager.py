@@ -1,8 +1,6 @@
 """Tests for ConfigManager."""
 
 import json
-import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -85,7 +83,7 @@ def test_persist_config(config_manager):
 
 def test_multiple_commands(config_manager):
     """Test adding multiple commands."""
-    initial_count = len(config_manager.get_allowlist())
+    _ = len(config_manager.get_allowlist())
     config_manager.add_to_allowlist("ls")
     config_manager.add_to_allowlist("cd")
     config_manager.add_to_allowlist("git")

@@ -1,6 +1,6 @@
 """Completion registry for managing command completions."""
 
-from typing import Any, Callable
+from collections.abc import Callable
 
 from prompt_toolkit.completion import Completion
 

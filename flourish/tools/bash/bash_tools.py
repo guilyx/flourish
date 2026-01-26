@@ -168,7 +168,7 @@ def execute_bash(cmd: str, tool_context: ToolContext | None = None) -> dict:
         # Log tool call to conversation log
         log_tool_call(
             "execute_bash",
-                {"cmd": cmd, "cwd": str(globals_module.GLOBAL_CWD)},
+            {"cmd": cmd, "cwd": str(globals_module.GLOBAL_CWD)},
             result,
             success=(process.returncode == 0),
         )
@@ -179,7 +179,7 @@ def execute_bash(cmd: str, tool_context: ToolContext | None = None) -> dict:
             stdout=stdout,
             stderr=stderr,
             exit_code=process.returncode,
-                cwd=str(globals_module.GLOBAL_CWD),
+            cwd=str(globals_module.GLOBAL_CWD),
         )
 
         return result
