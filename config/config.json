@@ -39,7 +39,8 @@
     "format",
     "mkfs",
     "sudo",
-    "chmod 777"
+    "chmod 777",
+    "rm"
   ],
   "skills": {
     "enabled": [

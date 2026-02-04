@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from flourish.tools import get_bash_tools, get_enabled_tool_names
 
 
@@ -11,7 +9,10 @@ def test_get_enabled_tool_names_fallback_on_config_error():
     """get_enabled_tool_names returns all registry tool names when ConfigManager fails."""
     mock_registry = MagicMock()
     mock_registry.get_all_tool_names.return_value = ["execute_bash", "get_user"]
-    with patch("flourish.config.config_manager.ConfigManager", side_effect=RuntimeError("config load failed")):
+    with patch(
+        "flourish.config.config_manager.ConfigManager",
+        side_effect=RuntimeError("config load failed"),
+    ):
         with patch("flourish.tools.get_registry", return_value=mock_registry):
             result = get_enabled_tool_names()
     assert result == ["execute_bash", "get_user"]

@@ -18,7 +18,9 @@ def test_migrate_from_commands_json_success(tmp_path):
     """_migrate_from_commands_json creates config.json with skills and plugins."""
     old_path = tmp_path / "commands.json"
     new_path = tmp_path / "config.json"
-    old_path.write_text(json.dumps({"allowlist": ["ls"], "blacklist": ["rm"], "model": "gpt-4o-mini"}))
+    old_path.write_text(
+        json.dumps({"allowlist": ["ls"], "blacklist": ["rm"], "model": "gpt-4o-mini"})
+    )
 
     cm = ConfigManager(config_file=str(tmp_path / "other.json"))
     cm._migrate_from_commands_json(old_path, new_path)
@@ -82,12 +84,14 @@ def test_load_config_migrates_tools_to_skills(tmp_path):
     """Loading config with tools.enabled but no skills.enabled sets default skills."""
     config_file = tmp_path / "config.json"
     config_file.write_text(
-        json.dumps({
-            "allowlist": [],
-            "blacklist": [],
-            "tools": {"enabled": ["execute_bash", "get_user"]},
-            "plugins": {"enabled": []},
-        })
+        json.dumps(
+            {
+                "allowlist": [],
+                "blacklist": [],
+                "tools": {"enabled": ["execute_bash", "get_user"]},
+                "plugins": {"enabled": []},
+            }
+        )
     )
     cm = ConfigManager(config_file=str(config_file))
     # Should have migrated to default skills
@@ -102,13 +106,15 @@ def test_load_config_drops_tools_section(tmp_path):
     """Loading config with tools section drops it from in-memory config."""
     config_file = tmp_path / "config.json"
     config_file.write_text(
-        json.dumps({
-            "allowlist": [],
-            "blacklist": [],
-            "skills": {"enabled": ["bash"]},
-            "tools": {"enabled": ["execute_bash"]},
-            "plugins": {"enabled": []},
-        })
+        json.dumps(
+            {
+                "allowlist": [],
+                "blacklist": [],
+                "skills": {"enabled": ["bash"]},
+                "tools": {"enabled": ["execute_bash"]},
+                "plugins": {"enabled": []},
+            }
+        )
     )
     cm = ConfigManager(config_file=str(config_file))
     assert cm.get_config().get("tools") is None

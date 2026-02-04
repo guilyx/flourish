@@ -1,6 +1,5 @@
 """Unit tests for ConfigManager plugins and load/save edge cases."""
 
-import json
 from unittest.mock import patch
 
 import pytest

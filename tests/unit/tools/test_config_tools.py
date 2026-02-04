@@ -35,7 +35,9 @@ def test_add_to_allowlist_when_global_none():
 def test_add_to_allowlist_config_manager_exception():
     """add_to_allowlist succeeds when ConfigManager raises."""
     globals_module.GLOBAL_ALLOWLIST = []
-    with patch("flourish.config.config_manager.ConfigManager", side_effect=RuntimeError("no config")):
+    with patch(
+        "flourish.config.config_manager.ConfigManager", side_effect=RuntimeError("no config")
+    ):
         result = config_tools.add_to_allowlist("pwd")
     assert result["status"] == "success"
     assert "pwd" in result["allowlist"]
@@ -71,7 +73,9 @@ def test_add_to_blacklist_when_global_none():
 def test_add_to_blacklist_config_manager_exception():
     """add_to_blacklist succeeds when ConfigManager raises."""
     globals_module.GLOBAL_BLACKLIST = []
-    with patch("flourish.config.config_manager.ConfigManager", side_effect=ImportError("no module")):
+    with patch(
+        "flourish.config.config_manager.ConfigManager", side_effect=ImportError("no module")
+    ):
         result = config_tools.add_to_blacklist("dd")
     assert result["status"] == "success"
     assert "dd" in result["blacklist"]

@@ -18,32 +18,38 @@ def temp_conversation_log(tmp_path):
     # Log format: "timestamp - name - level - JSON_MESSAGE"
     lines = [
         "2026-01-01 12:00:01 - flourish.conversation - INFO - "
-        + json.dumps({
-            "timestamp": "2026-01-01T12:00:01",
-            "event": "tool_call",
-            "tool": "execute_bash",
-            "parameters": {"cmd": "ls"},
-            "success": True,
-            "duration_seconds": 0.05,
-        }),
+        + json.dumps(
+            {
+                "timestamp": "2026-01-01T12:00:01",
+                "event": "tool_call",
+                "tool": "execute_bash",
+                "parameters": {"cmd": "ls"},
+                "success": True,
+                "duration_seconds": 0.05,
+            }
+        ),
         "2026-01-01 12:00:02 - flourish.conversation - INFO - "
-        + json.dumps({
-            "timestamp": "2026-01-01T12:00:02",
-            "event": "tool_call",
-            "tool": "execute_bash",
-            "parameters": {"cmd": "pwd"},
-            "success": True,
-            "duration_seconds": 0.02,
-        }),
+        + json.dumps(
+            {
+                "timestamp": "2026-01-01T12:00:02",
+                "event": "tool_call",
+                "tool": "execute_bash",
+                "parameters": {"cmd": "pwd"},
+                "success": True,
+                "duration_seconds": 0.02,
+            }
+        ),
         "2026-01-01 12:00:03 - flourish.conversation - INFO - "
-        + json.dumps({
-            "timestamp": "2026-01-01T12:00:03",
-            "event": "tool_call",
-            "tool": "ros2_topic_list",
-            "parameters": {},
-            "success": False,
-            "duration_seconds": 1.5,
-        }),
+        + json.dumps(
+            {
+                "timestamp": "2026-01-01T12:00:03",
+                "event": "tool_call",
+                "tool": "ros2_topic_list",
+                "parameters": {},
+                "success": False,
+                "duration_seconds": 1.5,
+            }
+        ),
     ]
     log_file.write_text("\n".join(lines), encoding="utf-8")
     return log_file
@@ -103,7 +109,9 @@ def test_get_tool_call_stats_include_recent_zero():
 
 def test_get_tool_call_stats_permission_error():
     """get_tool_call_stats returns error on PermissionError."""
-    with patch.object(history_tools, "_get_latest_conversation_logs", side_effect=PermissionError("denied")):
+    with patch.object(
+        history_tools, "_get_latest_conversation_logs", side_effect=PermissionError("denied")
+    ):
         with patch("flourish.tools.history.history_tools.log_tool_call"):
             result = history_tools.get_tool_call_stats(max_sessions=1)
     assert result["status"] == "error"
@@ -112,7 +120,9 @@ def test_get_tool_call_stats_permission_error():
 
 def test_get_tool_call_stats_generic_exception():
     """get_tool_call_stats returns error on generic Exception."""
-    with patch.object(history_tools, "_get_latest_conversation_logs", side_effect=RuntimeError("parse failed")):
+    with patch.object(
+        history_tools, "_get_latest_conversation_logs", side_effect=RuntimeError("parse failed")
+    ):
         with patch("flourish.tools.history.history_tools.log_tool_call"):
             result = history_tools.get_tool_call_stats(max_sessions=1)
     assert result["status"] == "error"
@@ -201,9 +211,18 @@ def test_read_conversation_history_success_with_entries(tmp_path):
     log_file = session_dir / "conversation.log"
     lines = [
         "2026-01-01 12:00:01 - flourish.conversation - INFO - "
-        + json.dumps({"timestamp": "2026-01-01T12:00:01", "event": "conversation", "role": "user", "content": "hi"}),
+        + json.dumps(
+            {
+                "timestamp": "2026-01-01T12:00:01",
+                "event": "conversation",
+                "role": "user",
+                "content": "hi",
+            }
+        ),
         "2026-01-01 12:00:02 - flourish.conversation - INFO - "
-        + json.dumps({"timestamp": "2026-01-01T12:00:02", "event": "tool_call", "tool": "execute_bash"}),
+        + json.dumps(
+            {"timestamp": "2026-01-01T12:00:02", "event": "tool_call", "tool": "execute_bash"}
+        ),
     ]
     log_file.write_text("\n".join(lines), encoding="utf-8")
 

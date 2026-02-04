@@ -1,10 +1,7 @@
 """Unit tests for logging module."""
 
 import json
-from pathlib import Path
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from flourish.logging import logger as log_module
 
@@ -12,7 +9,9 @@ from flourish.logging import logger as log_module
 def test_initialize_session_log_creates_session_dir(tmp_path):
     """initialize_session_log creates timestamped session dir and log files."""
     with patch.object(log_module, "BASE_LOGS_DIR", tmp_path):
-        with patch.dict(log_module.__dict__, {"_conversation_logger": None, "_terminal_logger": None}):
+        with patch.dict(
+            log_module.__dict__, {"_conversation_logger": None, "_terminal_logger": None}
+        ):
             session_dir = log_module.initialize_session_log()
             assert session_dir is not None
             assert session_dir.is_dir()
@@ -121,7 +120,9 @@ def test_log_terminal_output_success():
     """log_terminal_output writes JSON terminal log entry."""
     mock_logger = MagicMock()
     with patch.object(log_module, "_setup_terminal_logger", return_value=mock_logger):
-        log_module.log_terminal_output("ls -la", stdout="out", stderr="err", exit_code=0, cwd="/tmp")
+        log_module.log_terminal_output(
+            "ls -la", stdout="out", stderr="err", exit_code=0, cwd="/tmp"
+        )
     mock_logger.info.assert_called_once()
     data = json.loads(mock_logger.info.call_args[0][0])
     assert data["command"] == "ls -la"

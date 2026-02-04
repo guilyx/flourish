@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from click.testing import CliRunner
 
-from flourish.ui.cli import agent_command, cli, tui
+from flourish.ui.cli import cli
 
 
 @pytest.fixture
@@ -64,7 +64,10 @@ def test_cli_no_subcommand_invokes_run_tui(runner):
 
 def test_agent_command_stream_callback_invoked(runner):
     """In stream mode, run_agent_live_sync receives a callback; invoking it covers console.print."""
-    def call_stream_callback(prompt, allowed_commands=None, blacklisted_commands=None, stream_callback=None):
+
+    def call_stream_callback(
+        prompt, allowed_commands=None, blacklisted_commands=None, stream_callback=None
+    ):
         if stream_callback:
             stream_callback("chunk1")
             stream_callback("chunk2")
