@@ -39,5 +39,22 @@
     "mkfs",
     "sudo",
     "chmod 777"
-  ]
+  ],
+  "skills": {
+    "enabled": [
+      "bash",
+      "config",
+      "history",
+      "ros2",
+      "system",
+      "tool_manager"
+    ]
+  },
+  "plugins": {
+    "enabled": [
+      "zsh_bindings",
+      "ls_color",
+      "cd_enhancement"
+    ]
+  }
 }
