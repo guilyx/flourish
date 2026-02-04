@@ -168,7 +168,7 @@ There is no multi-turn conversation in the current implementation. Every call is
 | Instruction | No allowlist/blacklist in prompt; no cwd/git/history context; thinking config hardcoded. |
 | Session | Every request is single-turn; no conversation history in runner or TUI. |
 | Runner | Duplicated event handling; inconsistent response assembly between stream and non-stream; exceptions flattened; no trace id or token logging. |
-| TUI | Uses non-streaming path; no streaming UX. |
+| TUI | Uses non-streaming path; no streaming UX; no visible sandbox for commands/outputs. |
 | Security | Auto-add to allowlist, no confirmation; only blacklist is a hard barrier. |
 | Observability | No trace id, no token/cost visibility, no structured analytics. |
 | Tools | Large flat set; instruction does not guide tool choice; get_user is heavy. |
@@ -206,6 +206,7 @@ This section is ordered by dependency and impact. It does not endorse a particul
 ### 4.5 TUI and UX
 
 - **Use the streaming path in the TUI**: call `run_agent_live` (or equivalent) and render tokens as they arrive so the user sees progress.
+- **Add a visual “sandbox environment” pane**: a dedicated area in the TUI where the user can see commands as they are executed and their outputs (stdout/stderr) in real time. Today, command execution is opaque; a sandbox view would make tool runs visible and debuggable without leaving the TUI.
 - **Improve error handling**: show a clear, actionable message and, where possible, distinguish network/auth errors from model errors.
 
 ### 4.6 Security (Optional but Recommended)
