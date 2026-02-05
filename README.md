@@ -5,7 +5,7 @@
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/flouri.svg)](https://pypi.org/project/flouri/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![CI](https://github.com/guilyx/flouri/actions/workflows/ci.yml/badge.svg)](https://github.com/guilyx/flouri/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/guilyx/flouri/graph/badge.svg)](https://codecov.io/gh/guilyx/flouri)
+[![codecov](https://codecov.io/gh/guilyx/flourish/graph/badge.svg)](https://codecov.io/gh/guilyx/flourish)
 
 AI-powered terminal: run normal bash commands and get help from an LLM with `?` or `flouri agent "..."`. Commands use an allowlist/blacklist; supports OpenAI, Anthropic, Google, and others via [LiteLLM](https://litellm.ai/).
 
